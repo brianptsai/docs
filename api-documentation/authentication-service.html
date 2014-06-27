@@ -5,5 +5,122 @@ post_excerpt: ""
 layout: page
 permalink: /?page_id=57
 ---
-<p style="color: #000000;">This page will contain documentation for authentication endpoints. The authentication service implements <a style="color: #1250a8;" href="http://tools.ietf.org/html/draft-ietf-oauth-v2-31">OAuth 2.0</a>.</p>
-&nbsp;
+<h1>Authentication Service</h1>
+
+This page will contain documentation for authentication endpoints. The authentication service implements <a href="http://tools.ietf.org/html/draft-ietf-oauth-v2-31">OAuth 2.0</a>.
+
+<h2>POST /v1/auth/oauth/token</h2>
+
+Generate and retrieve an access_token. Used to exchange an authorization grant for an access token, typically with client authentication.
+
+<strong>This is a sessionless endpoint</strong>. You DO NOT need to have an authenticated session to make this request. Refer to <a href="/api/v1/how-to-construct-the-header">Constructing a Request</a>.
+
+<strong>Request Format</strong>
+
+<table>
+<thead>
+<tr>
+  <th>Parameter Name</th>
+  <th>Type</th>
+  <th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>grant_type</td>
+  <td>String</td>
+  <td>Either <code>password</code> or <code>refresh_token</code> or <code>facebook</code></td>
+</tr>
+<tr>
+  <td>username</td>
+  <td>String</td>
+  <td>Username, email, or user id (anonymous users) of the user (required if grant_type=password)</td>
+</tr>
+<tr>
+  <td>password</td>
+  <td>String</td>
+  <td>Password for the user (required if grant_type=password)</td>
+</tr>
+<tr>
+  <td>refresh_token</td>
+  <td>String</td>
+  <td>A refresh_token previously issued by this endpoint</td>
+</tr>
+<tr>
+  <td>external_access_token</td>
+  <td>String</td>
+  <td>External access token (e.g. issued by Facebook)</td>
+</tr>
+</tbody>
+</table>
+
+<strong>Example Request</strong>
+
+<pre><code>{
+  "grant_type": "password",
+  "username":"user@domain.com",
+  "password":"46f2u5i3guyfegg23p9d2h9"
+}
+</code></pre>
+
+or
+
+<pre><code>{
+  "grant_type": "refresh_token",
+  "refresh_token": "wzsdEhJ1eVOksgbW5buPmZkSqG8"
+}
+</code></pre>
+
+or
+
+<pre><code>{
+"grant_type": "facebook",
+"external_access_token": "CAACEdEose0cBAOL9NDZApbltf3R9gzsoK2ziXNZAb4RdK1RTEq13vVLSTGnMX8587C4YdfjAajzeb4yTVGvnQDVXvLNBT5I5T5HbWGYhPnLOYlAjexDrmhGdczIPKOyxqKxTPoWpTHIH3krxJ7byGNtgAYzQHt0Pm23ZAZBtKcFVWkE3DMsABfZB6JdNzVM3AeyncCApzmgZDZD"
+}
+</code></pre>
+
+<strong>Example Response</strong>
+
+<pre><code>{
+    "data": {
+        "access_token": "Tb4e0-JTnZndaRsWXgYiWPXcARc",
+        "token_type": "bearer",
+        "refresh_token": "kklwtUxfhoufYDArrFgE3jm8NBk",
+        "expires_in": 863999
+    },
+    "meta": {}
+}
+</code></pre>
+
+<strong>Errors</strong>
+
+Invalid username or password
+
+<pre><code>{
+    "error": {
+        "uuid": "f4686107-fb50-4664-98ad-5bc71a7dde7b",
+        "key": "auth_svc.invalid_credentials",
+        "code": "1.0.100.401",
+        "description": "credentials were invalid",
+        "time": "2014-03-05T18:29:00Z"
+    },
+    "meta": {}
+}
+</code></pre>
+
+Account suspension
+
+<pre><code>{
+    "error": {
+        "uuid": "ac758ffa-8e8f-4887-9687-7ca14a83e7c2",
+        "key": "user_svc.user.suspended",
+        "code": "2.1.101.403",
+        "description": "account suspended",
+        "time": "2014-03-05T18:34:12Z",
+        "permanent": false,
+        "end_time": "2014-03-06T18:34:12Z",
+        "message": "Account Suspended"
+    },
+    "meta": {}
+}
+</code></pre>
