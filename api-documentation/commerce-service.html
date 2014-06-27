@@ -1,0 +1,1832 @@
+---
+post_title: Commerce Service
+author: Stuart Frederich-Smith
+post_excerpt: ""
+layout: page
+permalink: /api-documentation/commerce-service/
+---
+# Commerce Service
+
+## Price Data Types
+
+Price.amount and Transaction.paid_amount are exact decimal values and not floats. You may want to deserialize them as decimals in your client language.
+
+## Endpoints and Callbacks
+
+* Currencies
+  * [GET /v1/commerce/currencies](#GET_/v1/commerce/currencies)
+  * [GET /v1/commerce/currencies/:id](#GET_/v1/commerce/currencies/:id)
+* Balances
+  * [GET /v1/commerce/balances](#GET_/v1/commerce/balances)
+  * [GET /v1/commerce/balances/title_accounts/:title_account_id/currencies/:currency_id](#GET_/v1/commerce/balances/title_accounts/:title_account_id/currencies/:currency_id)
+  * [POST /v1/commerce/balances/title_accounts/:title_account_id/currencies/:currency_id/credit](#POST_/v1/commerce/balances/title_accounts/:title_account_id/currencies/:currency_id/credit)
+  * [POST /v1/commerce/balances/title_accounts/:title_account_id/currencies/:currency_id/debit](#POST_/v1/commerce/balances/title_accounts/:title_account_id/currencies/:currency_id/debit)
+* Transactions
+  * [GET /v1/commerce/transactions](#GET_/v1/commerce/transactions)
+  * [GET /v1/commerce/transactions/:id](#GET_/v1/commerce/transactions/:id)
+  * [POST /v1/commerce/transactions](#POST_/v1/commerce/transactions)
+  * [POST /v1/commerce/transactions/:id/record_receipt](#POST_/v1/commerce/transactions/:id/record_receipt)
+  * [POST /v1/commerce/transactions/:id/release](#POST_/v1/commerce/transactions/:id/release)
+  * [POST [external_inventory_callback]](#POST_[external_inventory_callback])
+* Catalogs
+  * [GET /v1/commerce/catalogs/:id/present](#GET_/v1/commerce/catalogs/:id/present)
+* Products
+  * [GET /v1/commerce/products/:id](#GET_/v1/commerce/products/:id)
+* Redemptions
+  * [GET /v1/commerce/redemption_codes?filter[user_id]](#GET_/v1/commerce/redemption_codes?filter[user_id])
+  * [GET /v1/commerce/redemption_codes/:code/status](#GET_/v1/commerce/redemption_codes/:code/status)
+  * [POST /v1/commerce/redemption_codes/:code/redeem](#GET_/v1/commerce/redemption_codes/:code/redeem)
+
+## Currencies
+
+### Description
+
+Currency entities represent either a real or virtual currency which is scoped to a particular title. You can create and update virtual currencies from the admin. Real currencies are immutable.
+
+### <a name="GET_/v1/commerce/currencies"></a>GET /v1/commerce/currencies
+
+#### Description
+
+Retrieve a list of all currencies in the system.
+
+#### Parameters
+
+Parameter Name | Description
+--- | --- 
+**page**<br>_optional_ | The requested page number of results (default: `1`).
+**per_page**<br>_optional_ | The requested number of results per page (default: `25`).
+
+#### Example Request
+
+```
+GET https://api.example.com/v1/commerce/currencies?page=1&per_page=2
+```
+
+#### Response
+
+```
+{ 
+  "data": [
+    {
+      "id": "593057625495",
+      "name": "diamonds",
+      "title_id": "123878434443",
+      "real": false,
+      "created_at": "2012-11-02T13:47:05Z",
+      "updated_at": "2012-11-02T13:47:05Z",
+      "entity_type": "currency"
+    },
+    {
+      "id": "980938902332",
+      "name": "USD",
+      "real": true,
+      "title_id": null,
+      "created_at": "2012-12-31T23:59:59Z",
+      "updated_at": "2012-12-31T23:59:59Z",
+      "entity_type": "currency"
+    }
+  ],
+  "meta": {
+    "page": 1,
+    "per_page": 2,
+    "total_pages": 2,
+    "total": 4
+  }
+}
+```
+
+#### Errors
+
+See standard REST errors for details.
+
+
+#### Notes
+
+### <a name="GET_/v1/commerce/currencies/:id"></a>GET /v1/commerce/currencies/:id
+
+#### Description
+
+Retrieve a single currency in the system
+
+#### Parameters
+
+None
+
+#### Example Request
+
+```
+GET https://api.example.com/v1/commerce/currencies/980938902332
+```
+
+
+#### Example Response
+
+```
+{ 
+  "data": {
+    "id": "593057625495",
+    "name": "USD",
+    "title_id": "123878434443",
+    "created_at": "2012-12-31T23:59:59Z",
+    "updated_at": "2012-12-31T23:59:59Z",
+    "real": true,
+    "entity_type": "currency"
+   }
+}
+```
+
+
+#### Errors
+
+HTTP Code | Internal Code | Name | Description/Metadata
+--- | --- | --- | ---
+404 | TBA | Not found | The requested object could not be found in the system. |
+
+#### Notes
+
+None
+
+## Balances
+
+A Balance is the amount of Currency a Title Account has. Balances can only exist for virtual Currencies. There is only one Balance for each Title Account / Currency pair. Each Balance has two sub-balances, purchased and earned. The purchased balance is the currency that has been bought with real currency (USD, EUR, etc). The earned balance is the currency that has been earned through playing the game.
+
+You cannot update any property on a Balance directly. You control the balances only through debit and credit operations or influence balances by posting transactions. When crediting a balance the entire amount goes into the earned sub-balance. When you debit a Balance, the debit operation happens across both sub-balances. First, the debit will happen against the purchased sub-balance. If purchased sub-balance is empty and there is still currency left to debit, the remaining debit happens on the earned sub-balance.
+
+Transactions will affect balances as well. VirtualTransactions remove currency from a balance, and purchased Currency Offers will put currency either in the earned or purchased sub-balance.
+
+### <a name="GET_/v1/commerce/balances"></a>GET /v1/commerce/balances
+
+#### Example Request
+
+```
+GET https://api.example.com/v1/commerce/balances?page=1&per_page=2&filter[title_account_id]=93040942234
+```
+
+Parameter Name | Description
+--- | --- 
+**filter**<br>_required_ | As with all index routes, we have a filter parameter. However you are REQUIRED to filter by title_account_id for this route! Ex. ...balances?filter[title_account_id]=19829829832
+**page**<br>_optional_ | The requested page number of results (default: `1`).
+**per_page**<br>_optional_ | The requested number of results per page (default: `25`).
+
+#### Example Response
+
+```
+{
+  "data": [
+    {
+      "id": "434939434234",
+      "user_id": "80983094834834",
+      "title_account_id": "93040942234",
+      "currency_id": "323901293823",
+      "purchased": 0,
+      "earned": 50,
+      "total": 50,
+      "created_at": "2012-11-02T13:47:05Z",
+      "updated_at": "2012-11-02T13:47:05Z",
+      "entity_type": "balance"
+    },
+    {
+      "id": "434939434234",
+      "user_id": "34209830948349394",
+      "title_account_id": "93040942234",
+      "currency_id": "4834983243",
+      "purchased": 20,
+      "earned": 20,
+      "total": 40,
+      "created_at": "2012-12-31T23:59:59Z",
+      "updated_at": "2012-12-31T23:59:59Z",
+      "entity_type": "balance"
+    }
+  ],
+  "meta": {
+    "page": 1,
+    "per_page": 2,
+    "total_pages": 2,
+    "total": 4
+  }
+}
+```
+
+### <a name="GET_/v1/commerce/balances/title_accounts/:title_account_id/currencies/:currency_id"></a>GET /v1/commerce/balances/title_accounts/:title_account_id/currencies/:currency_id
+
+#### Example Request
+
+```
+GET https://api.example.com/v1/commerce/balances/title_accounts/93040942234/currencies/323901293823
+```
+
+#### Example Response
+
+```
+{
+  "data": {
+    "id": "434939434234",
+    "user_id": "9083482094234",
+    "title_account_id": "93040942234",
+    "currency_id": "323901293823",
+    "purchased": 0,
+    "earned": 50,
+    "total": 50,
+    "created_at": "2012-12-31T23:59:59Z",
+    "updated_at": "2012-12-31T23:59:59Z",
+    "entity_type": "balance"
+  }
+}
+```
+
+### <a name="POST_/v1/commerce/balances/title_accounts/:title_account_id/currencies/:currency_id/credit"></a>POST /v1/commerce/balances/title_accounts/:title_account_id/currencies/:currency_id/credit
+
+#### Example Request
+
+```
+POST https://api.example.com/v1/commerce/balances/title_accounts/93040942234/currencies/323901293823/credit
+
+{
+  "data": {
+    "sub_balance": "earned",
+    "amount": 50
+  }
+}
+```
+
+#### Example Response
+
+```
+{
+  "data": {
+    "id": "434939434234",
+    "user_id": "9083482094234",
+    "title_account_id": "93040942234",
+    "currency_id": "323901293823",
+    "purchased": 0,
+    "earned": 50,
+    "total": 50,
+    "created_at": "2012-09-02T15:01:34Z",
+    "updated_at": "2012-12-31T23:59:59Z",
+    "entity_type": "balance"
+  }
+}
+```
+
+#### Notes
+You can credit only the 'earned' sub-balance.
+
+### <a name="POST_/v1/commerce/balances/title_accounts/:title_account_id/currencies/:currency_id/debit"></a>POST /v1/commerce/balances/title_accounts/:title_account_id/currencies/:currency_id/debit
+
+##### Example Request
+
+Assuming our Balance already has purchased sub-balance of 40 currency units, and an earned sub-balance of 40 currency units, we want to debit 40 units of currency. It will first debit from purchased up to the max of the purchased sub-balance, and then the remaining amount form earned.
+
+```
+POST https://api.example.com/v1/commerce/balances/title_accounts/93040942234/currencies/323901293823/debit
+
+{
+  "data": {
+    "amount": 50
+  }
+}
+```
+
+##### Example Response (debiting total)
+
+```
+{
+  "data": {
+    "id": "434939434234",
+    "user_id": "9083482094234",
+    "title_account_id": "93040942234",
+    "currency_id": "901293823",
+    "purchased": 0,
+    "earned": 30,
+    "total": 30,
+    "created_at": "2012-09-02T15:01:34Z",
+    "updated_at": "2012-12-31T23:59:59Z",
+    "entity_type": "balance"
+  }
+}
+```
+
+#### Notes
+
+This route will create the Balance entity if it does not exist.
+
+#### Errors
+
+See standard REST errors for details.
+
+HTTP Code | Internal Code | Name | Description/Metadata
+--- | --- | --- | ---
+500 | 7.2.202.500 | commerce_svc.balance.insufficient_funds | Will be thrown if you attempt to debit a balance with a greater amount than the balance contains.
+
+## Transactions
+
+Transactions represent the purchase of a Product by a Title Account in a Currency from a payment provider. There are only two supported payment providers currently:
+
+* ``platform``: The SGE platform commerce service, which debits the price of product in virtual currency from the title account's balance.
+* ``ios_app_store``: Apple's iOS App Store
+
+There are two entity types for transactions: VirtualTransaction and RealTransaction.
+
+### VirtualTransactions
+
+A VirtualTransaction is one fulfilled in the virtual currency managed by the platform. At any point in time, every VirtualTransaction it is one and only one of the following states:
+
+* __verified__: In order to be created, the VirtualTransaction must be valid. Attempts to create an invalid VirtualTransaction will fail. Thus the VirtualTransactions starts in the verified state. The user has enough currency
+* __fulfilled__: The Transaction has been verified and the product has been fulfilled to the Title Account.
+
+### RealTransactions
+
+A RealTransaction is one that takes place with a real currency with an external payment provider. At any point in time, every RealTransaction it is one and only one of the following states:
+
+* __reserved__: Initial state. The state the title account is guaranteed to receive this product, if it is later successfully verified and fulfilled.
+* __received_receipt__: The platform has received the receipt via [POST /v1/commerce/transactions/:id/record_receipt](#POST_/v1/commerce/transactions/:id/record_receipt).
+* __released__: The Transaction was initially reserved, but was explicitly canceled by the client. A transaction can only be canceled via the <a name="POST_/v1/commerce/transactions/:id/release"></a>POST /v1/commerce/transactions/:id/release endpoint. 
+* __verified__: The Transaction has been verified with the IOS App Store. It is waiting to become fulfilled.
+* __invalidated__: The IOS App Store has informed us the receipt is not valid. This can happen because of a code error, or a malicious user attempt. The Transaction cannot be moved to a different state.
+* __fulfilled__: The Transaction has been verified and the product has been fulfilled to the Title Account.
+
+### Fulfillment
+
+Fulfillment happens the same for both RealTransactions and VirtualTransactions. However, it happens differently for different product types:
+
+* __Items__: The external inventory callback is called with the Transaction data. This is simply a POST call back to your game server. You must respond with a 200 status.
+* __Currency Offers__: The amount of Currency in the offer is automatically credited to the purchased sub-balance of the Balance for the Title Account specified on the transaction.
+* __Bundles__: The above happens for each item in the bundle, sequentially. You will receive multiple callbacks if you have multiple items in a bundle.
+
+Currently, verification happens synchronously within the transaction. There is no retry or background processing. Any failures fail permanently and the transaction must be abandoned.
+
+Fulfillments, on the other hand DO have a retry mechanism in place. A transaction that has been verified will remain in the verified state until all fulfillments have been successfully granted, at which time the transaction will be marked as complete. The retry schedule is as follows:
+
+* 1 instant retry
+* 1 retry every 30 seconds x12 (first 6 minutes)
+* 1 retry every 60 seconds x12 (next 12 minutes)
+* 1 retry every 5 minutes x12 (next hour)
+* 1 retry every 15 minutes x12 (next 3 hours)
+* 1 retry every 30 minutes x12 (next 6 hours)
+* 1 retry every 60 minutes x40 (next 40 hours)
+
+Given the above, failed actions will remain in retry queue for a little more than 2 days and will end up being retried 101 times. If it does not succeed in this timeframe, then it is logged to disk where it can be reviewed and re-published manually if needed.
+
+Transactions for items will normally be fulfilled to the External Inventory Callback configured for the title in the admin panel on the Title edit page. However if the transaction is created with an inventory_callback_url, that will be used instead.
+
+The fulfillment array on the transaction represent the fulfillment that was done. Only for transactions against bundles will there be more than one fulfillment. The fulfillments will only appear once the transaction is moved into the verified state.
+
+### <a name="GET_/v1/commerce/transactions"></a>GET /v1/commerce/transactions
+#### Description
+Returns a list of transaction for the logged in user.
+#### Parameters
+
+Parameter Name | Description
+--- | ---
+**page**<br>_optional_ | The requested page number of results (default: `1`).
+**per_page**<br>_optional_ | The requested number of results per page (default: `25`).
+
+#### Example Request
+
+```
+GET /v1/commerce/transactions
+```
+
+#### Example Response
+
+```
+{
+  "data": [
+    {
+      "id": "16929286095722690145",
+      "title_account_id": "8668613352601353423",
+      "product_id": "13146127679494762403",
+      "currency_id": "1264384088276731134",
+      "state": "received_receipt",
+      "receipt": "receipt1",
+      "paid_amount": 251.0,
+      "transaction_time": "2014-01-09T14:28:23Z",
+      "external_transaction_identifier": "id.transaction",
+      "created_at": "2014-01-09T14:28:23Z",
+      "updated_at": "2014-01-09T14:28:23Z",
+      "received_receipt_at": null,
+      "verified_at": null,
+      "fulfilled_at": null,
+      "released_at": null,
+      "invalidated_at": null,
+      "expired_at": null,
+      "payment_provider": "ios_app_store",
+      "catalog_id": null,
+      "collection_id": null,
+      "inventory_callback_url": null,
+      "user_id": "16806270264280902588",
+      "promotion_id": "2143697359208892202",
+      "base_price": null,
+      "entity_type": "real_transaction"
+    }
+  ],
+  "meta":{
+    "page":1,
+    "per_page":25,
+    "total_pages":1,
+    "total":1
+  }
+}
+```
+
+### <a name="GET_/v1/commerce/transactions/:id"></a>GET /v1/commerce/transactions/:id
+#### Description
+Shows the current state of  transaction.
+
+#### Example Request
+
+```
+GET /v1/commerce/transactions/3446010522836258124
+```
+
+#### Example Response for VirtualTransaction in __fulfilled__ state, single product
+
+```
+{
+  "data": {
+    "id": "3446010522836258124",
+    "user_id": "9083482094234",
+    "title_account_id": "17910340723500160860",
+    "payment_provider": "platform",
+    "product_id": "6919315393507255133",
+    "currency_id": "593057625495",
+    "state": "fulfilled",
+    "catalog_id": "9094830943434234",
+    "collection_id": "930482934834434",
+    "inventory_callback_url": null,
+    "paid_amount": 10.0,
+    "base_price": 10.0,
+    "promotion_id": nil,
+    "fulfilled_at": "2012-12-31T23:59:59Z",
+    "product":{
+      "id":"8091185133193337924",
+      "name":"helmet",
+      "created_at":"2014-02-05T17:31:16Z",
+      "updated_at":"2014-02-05T17:31:16Z",
+      "description":null,
+      "preview_asset":null,
+      "visibility":true,
+      "visibility_start_at":null,
+      "visibility_end_at":null,
+      "title_id":"11345154161845302146",
+      "external_inventory_identifier":"id.helmet",
+      "ios_app_store_identifier":"com.game.helmet",
+      "storefront_tags":[],
+      "price_ids":[],
+      "entity_type":"item"
+    },    
+    "fulfillments": [
+      {
+        "id": "9083094820934",
+        "product_id": "6919315393507255133",
+        "transaction_id": "3446010522836258124",
+        "fulfillable_id": "3446010522836258124",
+        "fulfillable_entity_type": "virtual_transaction",
+        "last_failed_at": nil,
+        "failures": 0,
+        "state": 'fulfilled',
+        "fulfilled_at": "2013-10-21T00:29:27Z",
+        "created_at": "2013-10-21T00:29:27Z",
+        "updated_at": "2013-11-21T00:29:27Z",
+        "entity_type": "fulfillment"
+      }
+    ]
+    "created_at": "2012-12-31T23:59:57Z",
+    "updated_at": "2012-12-31T23:59:57Z",
+    "entity_type": "virtual_transaction"
+  }
+}
+```
+
+#### Example Response for RealTransaction in __reserved__ state, single product
+
+```
+{
+  "data": {
+    "id": "3446010522836258124",
+    "user_id": "9083482094234",
+    "title_account_id": "17910340723500160860",
+    "payment_provider": "ios_app_store",
+    "product_id": "6919315393507255133",
+    "currency_id": null,
+    "state": "reserved",
+    "receipt": null,
+    "catalog_id": "9094830943434234",
+    "collection_id": "930482934834434",
+    "inventory_callback_url": null,
+    "paid_amount": null,
+    "transaction_time": null,
+    "product":{
+      "id":"8091185133193337924",
+      "name":"helmet",
+      "created_at":"2014-02-05T17:31:16Z",
+      "updated_at":"2014-02-05T17:31:16Z",
+      "description":null,
+      "preview_asset":null,
+      "visibility":true,
+      "visibility_start_at":null,
+      "visibility_end_at":null,
+      "title_id":"11345154161845302146",
+      "external_inventory_identifier":"id.helmet",
+      "ios_app_store_identifier":"com.game.helmet",
+      "storefront_tags":[],
+      "price_ids":[],
+      "entity_type":"item"
+    },    
+    "fulfilled_at": null,
+    "received_receipt_at": null,
+    "verified_at": null,
+    "expired_at": null,
+    "released_at": null,
+    "invalidated_at": null,
+    "base_price": nil,
+    "promotion_id": nil,
+    "external_transaction_identifier": null,
+    "fulfillments": [],
+    "ios_app_store_verfication_url": "https://buy.itunes.apple.com/verifyReceipt",
+    "created_at": "2012-12-31T23:59:59Z",
+    "updated_at": "2012-12-31T23:59:59Z",
+    "entity_type": "real_transaction"
+  }
+}
+```
+
+#### Deprecation
+* ``transaction_id`` is deprecated on fulfillment entities. Use ``fulfillable_id`` instead.
+
+#### Example Response for RealTransaction with __bundled product__
+```
+{
+  "id":"14655480867734606115",
+  "title_account_id":"6637181824021141103",
+  "product_id":"13265025162150368708",
+  "currency_id":"1760529372495724802",
+  "state":"received_receipt",
+  "receipt":"receipt1",
+  "paid_amount":251.0,
+  "transaction_time":"2014-02-05T17:31:16Z",
+  "external_transaction_identifier":"id.transaction",
+  "created_at":"2014-02-05T17:31:16Z",
+  "updated_at":"2014-02-05T17:31:16Z",
+  "received_receipt_at":null,
+  "verified_at":null,
+  "fulfilled_at":null,
+  "released_at":null,
+  "invalidated_at":null,
+  "expired_at":null,
+  "payment_provider":"ios_app_store",
+  "catalog_id":null,
+  "collection_id":null,
+  "inventory_callback_url":null,
+  "user_id":"14866441081219451485",
+  "promotion_id":"9826091875722738510",
+  "base_price":null,
+  "ios_app_store_verification_url":null,
+  "product":{
+    "id":"13265025162150368708",
+    "name":"helmet/hat",
+    "created_at":"2014-02-05T17:31:16Z",
+    "updated_at":"2014-02-05T17:31:16Z",
+    "description":null,
+    "preview_asset":null,
+    "visibility":true,
+    "visibility_start_at":null,
+    "visibility_end_at":null,
+    "title_id":"7073841081565085589",
+    "ios_app_store_identifier":"com.game.helmet",
+    "storefront_tags":[],
+    "price_ids":[],
+    "product_ids":[
+      "12508959539496394537",
+      "4026173341711878900"
+    ],
+    "products":[
+      {
+        "id":"12508959539496394537",
+        "name":"helmet",
+        "created_at":"2014-02-05T17:31:16Z",
+        "updated_at":"2014-02-05T17:31:16Z",
+        "description":null,
+        "preview_asset":null,
+        "visibility":true,
+        "visibility_start_at":null,
+        "visibility_end_at":null,
+        "title_id":"7073841081565085589",
+        "external_inventory_identifier":"id.helmet",
+        "ios_app_store_identifier":"com.game.helmet",
+        "storefront_tags":[],
+        "price_ids":[],
+        "entity_type":"item"
+      },
+      {
+        "id":"4026173341711878900",
+        "name":"hat",
+        "created_at":"2014-02-05T17:31:16Z",
+        "updated_at":"2014-02-05T17:31:16Z",
+        "description":null,
+        "preview_asset":null,
+        "visibility":true,
+        "visibility_start_at":null,
+        "visibility_end_at":null,
+        "title_id":"7073841081565085589",
+        "external_inventory_identifier":"id.hat",
+        "ios_app_store_identifier":null,
+        "storefront_tags":[],
+        "price_ids":[],
+        "entity_type":"item"
+      }
+    ],
+    "entity_type":"bundle"
+  },
+  "fulfillments":[],
+  "entity_type":"real_transaction"
+}
+```
+
+### <a name="POST_/v1/commerce/transactions"></a>POST /v1/commerce/transactions
+
+#### VirtualTransactions Example
+
+##### Description
+
+Creates and fulfills a VirtualTransactions. The ```title_account_id```, ```product_id```, ```currency_id``` must all reference existing entities. The specified currency must be a virtual currency. 
+
+The ```paid_amount``` argument must match the ```final_amount``` for the product in the specified currency. ```final_amount``` is a decoration on Prices in the [GET /v1/commerce/catalogs/:id/present](#GET_/v1/commerce/catalogs/:id/present) route.
+
+```catalog_id``` and ```collection_id``` are optional arguments which must match the catalog and collection that the product was bought out of. *ONLY* if collection_id is specified will the ```paid_amount``` expect to be the final_amount price from any active Promotion. Without it, the unpromoted price will be used even if there is an active promotion on the product. Also, sending them when creating the transaction will give you more analytics info on transactions.
+
+If the transaction contains an item, it will be synchronously added to the external inventory via [POST [external_inventory_callback]](#POST_[external_inventory_callback]).
+
+##### Example Request
+
+```
+POST /v1/commerce/transactions
+{
+  "data": {
+    "entity_type": "virtual_transaction",
+    "payment_provider": "platform",
+    "title_account_id": "17910340723500160860",
+    "product_id": "6919315393507255133",
+    "currency_id": "9180293928392083902",
+    "catalog_id": "9094830943434234",
+    "collection_id": "930482934834434",
+    "paid_amount": 9
+  }
+}
+```
+
+##### Example Response
+
+```
+{
+  "data": {
+    "id": "390890389427394234",
+    "user_id": "9083482094234",
+    "product_id": "6919315393507255133",
+    "title_account_id": "17910340723500160860",
+    "currency_id": "9180293928392083902",
+    "payment_provider": "platform",
+    "paid_amount": 9.0,
+    "base_price": 0.0,
+    "promotion_id": nil,
+    "state": "fulfilled",
+    "fulfilled_at": "2012-12-31T23:59:59Z",
+    "catalog_id": "9094830943434234",
+    "collection_id": "930482934834434",
+    "inventory_callback_url": null,
+    "fulfillments": [
+      {
+        "id": "9083094820934",
+        "product_id": "6919315393507255133",
+        "transaction_id": "390890389427394234",
+        "fulfillable_id": "3446010522836258124",
+        "fulfillable_entity_type": "virtual_transaction",
+        "last_failed_at": nil,
+        "failures": 0,
+        "state": 'fulfilled',
+        "fulfilled_at": "2013-10-21T00:29:27Z",
+        "created_at": "2013-10-21T00:29:27Z",
+        "updated_at": "2013-11-21T00:29:27Z",
+        "entity_type": "fulfillment"
+      }
+    ]
+    "updated_at": "2012-12-31T23:59:59Z",
+    "created_at": "2012-12-31T23:59:59Z",
+    "entity_type": "virtual_transaction"
+  }
+}
+```
+
+##### Deprecation
+* ``transaction_id`` is deprecated on fulfillment entities. Use ``fulfillable_id`` instead.
+
+#### RealTransaction Example
+
+##### Description
+
+This transaction is only put into the reserved state, until it is later confirmed with the [POST /v1/commerce/transactions/:id/record_receipt](#POST_/v1/commerce/transactions/:id/record_receipt) route.
+Creates a RealTransaction. The ```title_account_id``` and ```product_id``` must all reference existing entities.
+
+```catalog_id``` and ```collection_id``` are optional arguments which must match the catalog and collection that the product was bought out of. Specifying them will not affect the paid_amount when you record the receipt, since Promotions do not currently apply to RealTransactions. Also, sending them when creating the transaction will give you more analytics info on transactions.
+
+##### Example Request
+
+```
+POST /v1/commerce/transactions
+{
+  "data": {
+    "entity_type": "real_transaction",
+    "title_account_id": "17910340723500160860",
+    "catalog_id": "9094830943434234",
+    "collection_id": "930482934834434",
+    "product_id": "6919315393507255133"
+  }
+}
+```
+
+##### Example Response
+```
+{
+  "data": {
+    "id": "6444802717456406686",
+    "user_id": "9083482094234",
+    "product_id": "6919315393507255133",
+    "title_account_id": "17910340723500160860",
+    "currency_id": null,
+    "payment_provider": null,
+    "catalog_id": "9094830943434234",
+    "collection_id": "930482934834434",
+    "inventory_callback_url": null,
+    "paid_amount": 0.99,
+    "base_price": nil,
+    "promotion_id": nil,
+    "receipt": null,
+    "state": "reserved",
+    "transaction_time": null,
+    "external_transaction_identifier": null,
+    "fulfilled_at": null,
+    "received_receipt_at": null,
+    "verified_at": null,
+    "fulfillments": [],
+    "updated_at": "2012-12-31T23:59:59Z",
+    "created_at": "2012-12-31T23:59:59Z",
+    "entity_type": "real_transaction"
+  }
+}
+```
+
+### <a name="POST_/v1/commerce/transactions/:id/record_receipt"></a>POST /v1/commerce/transactions/:id/record_receipt
+#### Description
+
+This endpoint is only valid for RealTransactions, which are currently only for iOS App Store transactions.
+
+This endpoint requires you to have already created a RealTransaction in the reserved state. After you have completed the transaction with the iOS App Store, you need to callback with the iOS App Store receipt to finish the transaction. The platform will then verify the receipt with Apple and fulfill your product.
+
+Parameter Name | Description
+--- | --- 
+**currency_id** _required_ | (UUID) The id of a real currency entity that the product was purchased in.
+**paid_amount** _required_ | (Number) The amount that was paid by the user in the specified currency. You must fetch this from the iOS IAP API on the device and return it.
+**receipt** _required_     | (String) The receipt returned by the iOS IAP transaction.
+**external_transaction_identifer** _required_  | (String) The identifer from the iOS IAP SKTransaction object.
+**transaction_time** _required_  | (Timestamp) When the transaction actually occurred with the iOS App Store. You can fetch this from the iOS IAP API.
+
+If the transaction contains an item, it will be synchronously added to the external inventory via [POST [external_inventory_callback]](#POST_[external_inventory_callback]).
+
+The platform will first try Apple's production verification url, https://buy.itunes.apple.com/verifyReceipt, to verify your receipt. If the receipt is a sandbox receipt, it will attempt to verification with Apple's sandbox verification url, https://sandbox.itunes.apple.com/verifyReceipt, instead. The programmer should not have to change any code on their device when testing purchases with ITunes Test Users vs. testing with real ITunes users. The __ios_app_store_verification_url__ field on the RealTransaction entity will say which environment was used to verify the receipt.
+
+* If Apple says the receipt is valid, the transaction will move into the __verified__ state, and the platform will attempt to fulfill the transaction.
+* If Apple says the receipt is invalid, the transaction will move permanently into the __invalidated__ state.
+* If Apple verification fails for any other reason, such as network error, the transaction will remain in the __received_receipt__ state
+
+There is no retry of Apple verification attempts. If the verification fails it cannot be retried.
+
+#### Example Request
+
+```
+POST /v1/commerce/transactions/92392832323123/record_receipt
+
+{ 
+  "data": { 
+    "receipt": "apple-receipt-blob",
+    "currency_id": "9082309829323323", 
+    "paid_amount": 0.99, 
+    "transaction_time": "2012-12-31T23:59:59Z",
+    "external_transaction_identifier": "9737AB34DEF"
+  }
+}
+```
+
+#### Example Response
+
+```
+{ 
+  "data": {
+    "id": "6444802717456406686",
+    "user_id": "9083482094234",
+    "title_account_id": "2077381811502735086",
+    "product_id": "12784069629841245418",
+    "currency_id": "4330883608791013184",
+    "state": "fulfilled",
+    "receipt": "apple-receipt-blob",
+    "catalog_id": "9094830943434234",
+    "collection_id": "930482934834434",
+    "inventory_callback_url": null,
+    "paid_amount": 0.99,
+    "base_price": nil,
+    "promotion_id": nil,
+    "transaction_time": "2013-11-21T00:29:27Z",
+    "external_transaction_identifier": "9737AB34DEF",
+    "received_receipt_at": "2013-11-21T00:29:27Z",
+    "verified_at": "2013-11-21T00:29:27Z",
+    "fulfilled_at": "2013-11-21T00:29:27Z",
+    "released_at": null,
+    "invalidated_at": null,
+    "ios_app_store_verfication_url": "https://buy.itunes.apple.com/verifyReceipt",
+    "expired_at": null,
+    "payment_provider": "ios_app_store",
+    "fulfillments": [
+      {
+        "id": "9083094820934",
+        "product_id": "12784069629841245418",
+        "transaction_id": "6444802717456406686",
+        "fulfillable_id": "3446010522836258124",
+        "fulfillable_entity_type": "real_transaction",
+        "last_failed_at": nil,
+        "failures": 0,
+        "state": 'fulfilled',
+        "fulfilled_at": "2013-10-21T00:29:27Z",
+        "created_at": "2013-10-21T00:29:27Z",
+        "updated_at": "2013-11-21T00:29:27Z",
+        "entity_type": "fulfillment"
+      }
+    ]
+    "created_at": "2013-11-21T00:29:27Z",
+    "updated_at": "2013-11-21T00:29:27Z",
+    "entity_type": "real_transaction"
+  }
+}
+```
+
+#### Deprecation
+* ``transaction_id`` is deprecated on fulfillment entities. Use ``fulfillable_id`` instead.
+
+### <a name="POST_/v1/commerce/transactions/:id/release"></a>POST /v1/commerce/transactions/:id/release
+#### Description
+
+This endpoint is only valid for RealTransactions in the __reserved__ state.
+
+This call places the transaction in the __released__ state, indicating the system is no longer excepting to receive an Apple Store receipt for this transaction. Generally you will want to do this when the user cancels the purchase at the payment step.
+
+#### Example Request
+
+```
+POST /v1/commerce/transactions/92392832323123/release
+```
+
+#### Example Response
+
+```
+{ 
+  "data": {
+    "id": "6444802717456406686",
+    "user_id": "9083482094234",
+    "title_account_id": "2077381811502735086",
+    "product_id": "12784069629841245418",
+    "currency_id": null,
+    "state": "released",
+    "receipt": null,
+    "catalog_id": "9094830943434234",
+    "collection_id": "930482934834434",
+    "inventory_callback_url": null,
+    "paid_amount": null,
+    "base_price": nil,
+    "promotion_id": nil,
+    "transaction_time": null,
+    "external_transaction_identifier": null,
+    "created_at": "2013-11-21T00:29:27Z",
+    "updated_at": "2013-11-21T00:29:27Z",
+    "received_receipt_at": null,
+    "verified_at": null,
+    "fulfilled_at": null,
+    "released_at": "2013-11-21T00:29:31Z",
+    "invalidated_at": null,
+    "ios_app_store_verfication_url": nil,
+    "expired_at": null,
+    "fulfillments": [],
+    "payment_provider": "ios_app_store",
+    "entity_type": "real_transaction"
+  }
+}
+```
+
+### <a name="POST_[external_inventory_callback]"></a>POST [external_inventory_callback]
+
+Any time an transaction containing an item is in the __verified__ state, the platform will attempt to add the item to the external inventory. Adding to the external inventory happens via a HTTP POST callback, which returns a json object containing 1) the transaction that contains the item 2) the item to be added. 
+
+Items within bundles will be fulfilled on separate callbacks. For a bundle of 5 items, 5 separate POST callbacks will be issued, each with the same transaction but a different item.
+
+#### For transactions containing either a single item or a bundle containing more one or more times
+1. If your callback returns 200 status for every item, the transaction will move into the __fulfilled__ state.
+1. If your callback returns any non-200 status for any item, the transaction will remain in the __verified__ state.
+1. If your callback does not respond or there is any network error for any item, the transaction will remain in the __verified__ state.
+
+#### There is a cascading relationship of the callback url between the organization and the Transaction.
+1. If the inventory_callback_url is non-null on the transaction, this url will be used.
+1. Otherwise, there is a hard-coded external inventory add callback for the entire organization that will be used. All titles, all applications will use the same callback. To set/change this, SGE ops must configure it for you for your environment.
+
+Each product to be fulfilled will have its own fulfillment entity attached to the transaction. The id of this entity can be stored on the inventory server to guarantee there is no double fulfillment.
+
+If some products in a bundle transaction are fulfilled and others arent, the transaction will remain in the verified state, but some associated fulfillment entities will be in the fulfilled state.
+
+All callbacks for a transaction happen synchronously within the endpoint call that moves them into the verified state. For VirtualTransactions, thats [POST /v1/commerce/transactions](#POST_/v1/commerce/transactions). For RealTransactions, that's [POST /v1/commerce/transactions/:id/record_receipt](#POST_/v1/commerce/transactions/:id/record_receipt).
+
+All callbacks have Content-Type and Accept headers set to application/json.
+
+#### Example Callback - VirtualTransaction of a single item
+
+```
+{
+  "transaction": {
+    "id": "6787760033073513845",
+    "user_id": "9083482094234",
+    "title_account_id": "12552486871755131883",
+    "product_id": "1579623687763241930",
+    "currency_id": "13864296419226758579",
+    "state": "verified",
+    "catalog_id": "9094830943434234",
+    "collection_id": "930482934834434",
+    "inventory_callback_url": null,
+    "paid_amount": 10.0,
+    "fulfilled_at": null,
+    "payment_provider": "platform",
+    "base_price": 10.0,
+    "promotion_id": nil,
+    "created_at": "2013-11-21T00:29:27Z",
+    "updated_at": "2013-11-21T00:29:27Z",
+    "product": {
+      "id": "1579623687763241930",
+      "name": "helmet",
+      "description": null,
+      "preview_asset": null,
+      "visibility": true,
+      "visibility_start_at": null,
+      "visibility_end_at": null,
+      "title_id": "11437846975094160358",
+      "external_inventory_identifier": "id.helmet",
+      "ios_app_store_identifier": "com.sweetgame.helmet",
+      "price_ids": ["5454654852872442802"],
+      "storefront_tags": [],
+      "created_at": "2013-10-21T00:29:27Z",
+      "updated_at": "2013-11-21T00:29:27Z",
+      "entity_type": "item"
+    },
+    "currency": {
+      "id": "13864296419226758579",
+      "name": "coins",
+      "title_id": "11437846975094160358",
+      "created_at": "2013-10-21T00:29:27Z",
+      "updated_at": "2013-10-21T00:29:27Z",
+      "real": false,
+      "entity_type": "currency"
+    },
+    "price": {
+      "id": "5454654852872442802",
+      "currency_id": "13864296419226758579",
+      "amount": 10.0,
+      "product_id": "1579623687763241930",
+      "created_at": "2013-10-21T00:29:27Z",
+      "updated_at": "2013-11-21T00:29:27Z",
+      "entity_type": "price"
+    },
+    "entity_type": "virtual_transaction"
+  },
+  "item": {
+    "id": "1579623687763241930",
+    "name": "helmet",
+    "description": null,
+    "preview_asset": null,
+    "visibility": true,
+    "visibility_start_at": null,
+    "visibility_end_at": null,
+    "title_id": "11437846975094160358",
+    "external_inventory_identifier": "id.helmet",
+    "ios_app_store_identifier": "com.sweetgame.helmet",
+    "storefront_tags": [],
+    "price_ids": ["5454654852872442802"],
+    "created_at": "2013-10-21T00:29:27Z",
+    "updated_at": "2013-11-21T00:29:27Z",
+    "entity_type": "item"
+  }
+  "fulfillment": {
+    "id": "9083094820934",
+    product_id: "1579623687763241930",
+    transaction_id: "6787760033073513845",
+    last_failed_at: nil,
+    failures: 0,
+    state: 'unfulfilled',
+    fulfilled_at: nil,
+    "created_at": "2013-10-21T00:29:27Z",
+    "updated_at": "2013-11-21T00:29:27Z",
+    "entity_type": "fulfillment"
+  }
+}
+```
+
+#### Example Callback - RealTransaction of a single item
+
+```
+{
+  "transaction": {
+    "id": "6787760033073513845",
+    "user_id": "9083482094234",
+    "title_account_id": "12552486871755131883",
+    "product_id": "1579623687763241930",
+    "currency_id": "12973992577498197427",
+    "state": "verified",
+    "catalog_id": "9094830943434234",
+    "collection_id": "930482934834434",
+    "inventory_callback_url": null,
+    "paid_amount": 0.99,
+    "receipt": "apple-receipt-blob",
+    "received_receipt_at": "2013-11-21T00:29:44Z",
+    "created_at": "2013-11-21T00:29:27Z",
+    "updated_at": "2013-11-21T00:29:27Z",
+    "fulfilled_at": null,
+    "expired_at": null,
+    "invalidated_at": null,
+    "released_at": null,
+    "verified_at": "2013-11-21T00:29:45Z",
+    "external_transaction_identifier": "9737AB34DEF",
+    "transaction_time": "2013-11-21T00:29:40Z",
+    "payment_provider": "ios_app_store",
+    "base_price": nil,
+    "promotion_id": nil,
+    "ios_app_store_verfication_url": "https://buy.itunes.apple.com/verifyReceipt",
+    "product": {
+      "id": "1579623687763241930",
+      "name": "helmet",
+      "created_at": "2013-10-21T00:29:27Z",
+      "updated_at": "2013-10-21T00:29:27Z",
+      "description": null,
+      "preview_asset": null,
+      "visibility": true,
+      "visibility_start_at": null,
+      "visibility_end_at": null,
+      "title_id": "11437846975094160358",
+      "external_inventory_identifier": "id.helmet",
+      "ios_app_store_identifier": "com.sweetgame.helmet",
+      "price_ids": [],
+      "storefront_tags": [],
+      "entity_type": "item"
+    },
+    "currency": {
+      "id": "12973992577498197427",
+      "name": "USD",
+      "title_id": null,
+      "created_at": "2013-10-21T00:29:27Z",
+      "updated_at": "2013-10-21T00:29:27Z",
+      "real": true,
+      "entity_type": "currency"
+    },
+    "entity_type": "real_transaction"
+  },
+  "item": {
+    "id": "1579623687763241930",
+    "name": "helmet",
+    "created_at": "2013-10-21T00:29:27Z",
+    "updated_at": "2013-10-21T00:29:27Z",
+    "description": null,
+    "preview_asset": null,
+    "visibility": true,
+    "visibility_start_at": null,
+    "visibility_end_at": null,
+    "title_id": "11437846975094160358",
+    "external_inventory_identifier": "id.helmet",
+    "ios_app_store_identifier": "com.sweetgame.helmet",
+    "price_ids": [],
+    "storefront_tags": [],
+    "entity_type": "item"
+  },
+  "fulfillment": {
+    "id": "9083094820934",
+    product_id: "1579623687763241930",
+    transaction_id: "6787760033073513845",
+    last_failed_at: nil,
+    failures: 0,
+    state: 'unfulfilled',
+    fulfilled_at: nil,
+    "created_at": "2013-10-21T00:29:27Z",
+    "updated_at": "2013-11-21T00:29:27Z",
+    "entity_type": "fulfillment"
+  }
+}
+```
+
+## Catalogs
+
+### <a name="GET_/v1/commerce/catalogs/:id/present"></a>GET /v1/commerce/catalogs/:id/present
+
+#### Description
+This url presents the catalog for the logged in User. Associated collections, products, and prices are all embedded. Products which are either not visible or are outside of their visibility windows are not shown.  Collections within the catalog are restricted by segmentation tag by default.
+
+To retrieve the catalog without tag segmentation, pass 'false' for the 'restrict_by_segmentation_tag' parameter.  The default value for this flag is 'true'.
+
+Example: GET /v1/commerce/catalogs/:id/present?restrict_by_segmentation_tag=false
+
+Note ```final_amount``` decoration on price entity. This is the amount that the product must be bought at after any promotions are applied. In the example below, the sword is normally 100 diamonds, but there is a 10% promotion discount on the sword, so the final_amount is 90. final_amount is the amount you must pass to [POST /v1/commerce/transactions](#POST_/v1/commerce/transactions) or [POST /v1/commerce/transactions/:id/record_receipt](#POST_/v1/commerce/transactions/:id/record_receipt) as the ``paid_amount`` field.
+
+Also note ```active_promotion``` decoration on products. If the product has an active promotion for the collection that it is embedded in, it will appear here.
+
+
+#### Example Request
+
+```
+GET https://api.example.com/v1/commerce/catalogs/893482982843/present
+
+```
+
+#### Example Response
+
+```
+{
+  "data": {
+    "id": "893482982843",
+    "name": "tutorial",
+    "title_id": "19238283823",
+    "description": "Some simple items",
+    "preview_asset": "",
+    "created_at": "2012-09-02T15:01:34Z",
+    "updated_at": "2012-12-31T23:59:59Z",
+    "entity_type": "catalog",
+    "collection_ids": ["8348020022"],
+    "collections": [
+      {
+        "id": "8348020022",
+        "name": "tutorial",
+        "description": "Things you'll need",
+        "title_id": "19238283823",
+        "preview_asset": "http://s3.gameserver.com/game/tutorial_collection.jpg",
+        "created_at": "2012-09-02T15:01:34Z",
+        "updated_at": "2012-12-31T23:59:59Z",
+        "entity_type": "collection",
+        "product_ids": ["6919315393507255133", "3353662956455013861", "14227035963604051406"],
+        "products": [
+          {
+            "id": "6919315393507255133",
+            "name": "sword",
+            "description": "Better than your measly stick!",
+            "preview_asset": "http://s3.gameserver.com/game/helmet.jpg",
+            "external_inventory_identifier": "id.helmet",
+            "ios_app_store_identifier": "com.sweetgame.items.helmet",
+            "visibility": true,
+            "visibility_start_at": null,
+            "visibility_end_at": null,
+            "title_id": "19238283823",
+            "active_promotion": {
+              "id": "98320938910832323",
+              "name": "2013 sale",
+              "collection_id": "9888883483",
+              "product_id": "6919315393507255133",
+              "start_time": "2013-01-01T00:00:00Z",
+              "end_time": "2014-01-01T00:00:00Z",
+              "discount": 10,
+              "entity_type": "promotion"
+            },
+            "created_at": "2012-09-02T15:01:34Z",
+            "updated_at": "2012-12-31T23:59:59Z",
+            "entity_type": "item",
+            "storefront_tags": ["special"],
+            "price_ids": ["15154377184884199012", "10646933533475776783"],
+            "prices": [
+              {
+                "id": "15154377184884199012",
+                "amount": 100.0,
+                "final_amount": 90.0,
+                "entity_type": "price",
+                "product_id": "6919315393507255133",
+                "currency_id": "593057625496",
+                "created_at": "2012-09-02T15:01:34Z",
+                "updated_at": "2012-12-31T23:59:59Z",
+                "currency": {
+                  "id": "593057625496",
+                  "name": "diamonds",
+                  "real": false,
+                  "title_id": "19238283823",
+                  "created_at": "2012-12-31T23:59:59Z",
+                  "updated_at": "2012-12-31T23:59:59Z",
+                  "entity_type": "currency"
+                }
+              },
+              {
+                "id": "10646933533475776783",
+                "amount": 1.0,
+                "final_amount": 1.0,
+                "entity_type": "price",
+                "product_id": "6919315393507255133",
+                "currency_id": "980938902332",
+                "created_at": "2012-09-02T15:01:34Z",
+                "updated_at": "2012-12-31T23:59:59Z",
+                "currency": {
+                  "id": "980938902332",
+                  "name": "USD",
+                  "real": true,
+                  "title_id": "19238283823",
+                  "created_at": "2012-12-31T23:59:59Z",
+                  "updated_at": "2012-12-31T23:59:59Z",
+                  "entity_type": "currency"
+                }
+              }
+            ]
+          },
+          {
+            "id": "3353662956455013861",
+            "name": "1000 diamonds",
+            "description": "Make things easy on yourself!",
+            "preview_asset": "http://s3.gameserver.com/game/diamonds.jpg",
+            "amount": 1000,
+            "ios_app_store_identifier": "com.sweetgame.currency_offers.100_diamonds",
+            "visibility": true,
+            "visibility_start_at": null,
+            "visibility_end_at": null,
+            "title_id": "19238283823",
+            "active_promotion": null,
+            "created_at": "2012-09-02T15:01:34Z",
+            "updated_at": "2012-12-31T23:59:59Z",
+            "entity_type": "currency_offer",
+            "price_ids": ["980938902337"],
+            "storefront_tags": [],
+            "prices": [
+              {
+                "id": "980938902337",
+                "amount": 50000.0,
+                "final_amount": 50000.0,
+                "product_id": "3353662956455013861",
+                "currency_id": "4760391885782157975",
+                "created_at": "2012-09-02T15:01:34Z",
+                "updated_at": "2012-12-31T23:59:59Z",
+                "entity_type": "price",
+                "currency": {
+                  "id": "4760391885782157975",
+                  "name": "coppers",
+                  "real": false,
+                  "title_id": "19238283823",
+                  "created_at": "2012-12-31T23:59:59Z",
+                  "updated_at": "2012-12-31T23:59:59Z",
+                  "entity_type": "currency"
+                }
+              }
+            ]
+          },
+          {
+            "id": "14227035963604051406",
+            "name": "two hats",
+            "description": "can you wear two at once?",
+            "preview_asset": "http://s3.gameserver.com/game/two_hats.jpg",
+            "ios_app_store_identifier": "com.sweetgame.two_hats",
+            "visibility": true,
+            "visibility_start_at": null,
+            "visibility_end_at": null,
+            "title_id": "19238283823",
+            "active_promotion": null,
+            "created_at": "2012-09-02T15:01:34Z",
+            "updated_at": "2012-12-31T23:59:59Z",
+            "storefront_tags": [],
+            "entity_type": "bundle",
+            "product_ids": ["847276011197974302", "2763246500682572106"],
+            "products": [
+              {
+                "id": "847276011197974302",
+                "name": "red hat",
+                "description": "which pick will you hat?",
+                "preview_asset": "http://s3.gameserver.com/game/red.hat.jpg",
+                "external_inventory_identifier": "id.red.hat",
+                "ios_app_store_identifier": null,
+                "visibility": true,
+                "visibility_start_at": null,
+                "visibility_end_at": null,
+                "title_id": "19238283823",
+                "storefront_tags": [],
+                "created_at": "2012-09-02T15:01:34Z",
+                "updated_at": "2012-12-31T23:59:59Z",
+                "entity_type": "item",
+                "price_ids": []
+              },
+              {
+                "id": "2763246500682572106",
+                "name": "blue hat",
+                "description": "which hat will you pick?",
+                "preview_asset": "http://s3.gameserver.com/game/blue.hat.jpg",
+                "external_inventory_identifier": "id.blue.hat",
+                "ios_app_store_identifier": null,
+                "visibility": true,
+                "visibility_start_at": null,
+                "visibility_end_at": null,
+                "title_id": "19238283823",
+                "storefront_tags": [],
+                "created_at": "2012-09-02T15:01:34Z",
+                "updated_at": "2012-12-31T23:59:59Z",
+                "entity_type": "item",
+                "price_ids": []
+              }
+            ],
+            "price_ids": ["2512157490215411373"],
+            "prices": [
+              {
+                "id": "2512157490215411373", 
+                "amount": 200.0,
+                "final_amount": 200.0,
+                "product_id": "14227035963604051406",
+                "currency_id": "593057625496",
+                "created_at": "2012-09-02T15:01:34Z",
+                "updated_at": "2012-12-31T23:59:59Z",
+                "entity_type": "price",
+                "currency": {
+                  "id": "593057625496",
+                  "name": "diamonds",
+                  "real": false,
+                  "title_id": "19238283823",
+                  "created_at": "2012-12-31T23:59:59Z",
+                  "updated_at": "2012-12-31T23:59:59Z",
+                  "entity_type": "currency"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+## Products
+
+### <a name="GET_/v1/commerce/products/:id"></a>GET /v1/commerce/products/:id
+
+#### Description
+Returns an individual product with embedded prices and currencies. Note the ```final_amount``` decoration on price entity is incorrect, not guaranteed, and will be removed in the next version.
+
+## Codes redeemed by user
+
+### <a name="GET_/v1/commerce/redemption_codes?filter[user_id]"></a>GET /v1/commerce/redemption\_codes?filter[user\_id]
+
+#### Description
+
+Gets list of codes redeemed by user
+
+Parameter Name | Description
+--- | ---
+**filter[user_id]** _required_ | (UUID) The User ID
+**filter[xxx]** _optional_ | (UUID) The optional set of any additional filters
+
+#### Example Response
+
+```
+[
+  {
+    "id":"17409018160212928601",
+    "batch_id":"12571636031034717867",
+    "user_id":"10844831031505888464",
+    "code":"r7xttww96fm9c6g9w6wal5mhnxmfxnxt",
+    "status":1,
+    "created_at":"2014-03-03T14:34:40Z",
+    "updated_at":"2014-03-03T14:34:40Z",
+    "title_id":"13550482760702869064",
+    "title_account_id":"8659992162974915366",
+    "inventory_callback_url":null,
+    "lock_version":3,
+    "redeemed_at":"2014-03-03T14:34:40Z",
+    "fulfilled_at":null,
+    "fulfillments":[],
+    "batch":{
+      "id":"12571636031034717867",
+      "campaign_id":"15380844849364767655",
+      "name":"Batch 2",
+      "batch_size":1,
+      "active":true,
+      "created_at":"2014-03-03T16:34:40Z",
+      "updated_at":"2014-03-03T14:34:40Z",
+      "individual":false,
+      "internal":false,
+      "codes_created":1,
+      "codes_used":1,
+      "lock_version":2,
+      "title_id":"13550482760702869064",
+      "campaign":{
+        "id":"15380844849364767655",
+        "title_id":"13550482760702869064",
+        "name":"Campaign 1",
+        "description":null,
+        "start_date":"2014-02-28T16:34:39Z",
+        "end_date":"2014-03-06T16:34:39Z",
+        "enabled":true,
+        "max_redemptions":5,
+        "lock_version":5,
+        "codes_created":12,
+        "codes_used":2,
+        "created_at":"2014-03-03T16:34:39Z",
+        "updated_at":"2014-03-03T14:34:40Z",
+        "product_ids":[],
+        "products":[],
+        "entity_type":"campaign"
+      },
+      "group_code":{
+        "id":"14977453469494324673",
+        "batch_id":"12571636031034717867",
+        "code":"1111-2222-4444-3333",
+        "created_at":"2014-03-03T16:34:40Z",
+        "updated_at":"2014-03-03T16:34:40Z",
+        "title_id":"13550482760702869064",
+        "entity_type":"group_code"
+      },
+      "entity_type":"batch"
+    },
+    "entity_type":"individual_code"
+  },
+  {
+    "id":"7894074722078636860",
+    "batch_id":"9774757943827261014",
+    "user_id":"10844831031505888464",
+    "code":"1111222233334444",
+    "status":1,
+    "created_at":"2014-03-03T14:34:30Z",
+    "updated_at":"2014-03-03T14:34:30Z",
+    "title_id":"13550482760702869064",
+    "title_account_id":"8659992162974915366",
+    "inventory_callback_url":null,
+    "lock_version":3,
+    "redeemed_at":"2014-03-03T14:34:30Z",
+    "fulfilled_at":null,
+    "fulfillments":[],
+    "batch":{
+      "id":"9774757943827261014",
+      "campaign_id":"15380844849364767655",
+      "name":"Batch 1",
+      "batch_size":10,
+      "active":true,
+      "created_at":"2014-03-03T14:34:30Z",
+      "updated_at":"2014-03-03T14:34:30Z",
+      "individual":true,
+      "internal":false,
+      "codes_created":11,
+      "codes_used":1,
+      "lock_version":3,
+      "title_id":"13550482760702869064",
+      "campaign":{
+        "id":"15380844849364767655",
+        "title_id":"13550482760702869064",
+        "name":"Campaign 1",
+        "description":null,
+        "start_date":"2014-02-28T16:34:39Z",
+        "end_date":"2014-03-06T16:34:39Z",
+        "enabled":true,
+        "max_redemptions":5,
+        "lock_version":5,
+        "codes_created":12,
+        "codes_used":2,
+        "created_at":"2014-03-03T16:34:39Z",
+        "updated_at":"2014-03-03T14:34:40Z",
+        "product_ids":[],
+        "products":[],
+        "entity_type":"campaign"
+      },
+      "entity_type":"batch"
+    },
+    "entity_type":"individual_code"
+  }
+]
+```
+
+## Redemptions
+
+### <a name="POST\_/v1/commerce/redemption\_codes/:code/redeem"></a>POST /v1/commerce/redemption\_codes/:code/redeem
+
+#### Description
+
+Redeems both group and individual codes
+
+Parameter Name | Description
+--- | ---
+**code** _required_ | (String) The alphanumeric individual or a group code
+**user\_id** _required_ | (UUID) The User ID
+**title\_account\_id** _required_ | (UUID) The Title Account ID
+**inventory\_callback\_url** _optional_ | (String) The inventory callback url
+
+#### Response codes
+
+Status | Key | Code | Value
+--- | --- | --- | ---
+**200** | n/a | n/a | Success
+**404** | n/a | n/a | Code not found
+**412** | commerce_svc.batch.should_be_active | 7.20.200.412 | Error: batch should be active
+**412** | commerce_svc.campaign.should_be_active | 7.19.200.412 | Error: campaign should be active
+**403** | commerce_svc.campaign.max_redemptions_exceeded | 7.19.201.412 | Error: campaign max redemptions exceeded
+**410** | commerce_svc.individual_code.cannot_be_used_twice | 7.22.200.410 | Error: code cannot be used twice
+
+
+#### Example Request. Group code redemption
+
+```
+curl -X  POST '/v1/commerce/redemption_codes/9A2E3F9A3/redeem' -d '{
+   "data": {
+      "user_id": 15516768902667579408,
+      "title_account_id": 8699155139611847029
+   }
+```
+
+#### Example Response. Group code redemption
+
+```
+{
+  "id":"6233110504466525260",
+  "batch_id":"4674166508773027565",
+  "user_id":"15516768902667579408",
+  "code":"eetxgcl9jne3lyr6akp7nt5xtwt3ehfn",
+  "status":2,
+  "created_at":"2014-03-07T08:38:13Z",
+  "updated_at":"2014-03-07T08:38:14Z",
+  "title_id":"12778225959076357152",
+  "title_account_id":"8699155139611847029",
+  "inventory_callback_url":nil,
+  "lock_version":5,
+  "redeemed_at":"2014-03-07T08:38:14Z",
+  "fulfilled_at":"2014-03-07T08:38:14Z",
+  "entity_type":"individual_code"
+}
+```
+
+#### Example Request. Individual code redemption
+
+```
+curl -X  POST '/v1/commerce/redemption_codes/1111222233334444/redeem' -d '{
+   "data": {
+      "user_id": 12827988067089590768,
+      "title_account_id": 14660885356631276281
+   }
+```
+
+#### Example Response. Individual code redemption
+
+```
+{
+  "id":"16962106439331460180",
+  "batch_id":"14611424917294961010",
+  "user_id":"12827988067089590768",
+  "code":"1111222233334444",
+  "status":2,
+  "created_at":"2014-03-07T08:41:26Z",
+  "updated_at":"2014-03-07T08:41:26Z",
+  "title_id":"15992110498742718725",
+  "title_account_id":"14660885356631276281",
+  "inventory_callback_url":nil,
+  "lock_version":5,
+  "redeemed_at":"2014-03-07T08:41:26Z",
+  "fulfilled_at":"2014-03-07T08:41:26Z",
+  "entity_type":"individual_code"
+}
+```
+
+
+## Get the code redemption status
+
+### <a name="GET\_/v1/commerce/redemption\_codes/:code/status"></a>GET /v1/commerce/redemption\_codes/:code/status
+
+#### Description
+
+Get the code redemption status
+
+Parameter Name | Description
+--- | ---
+**code** _required_ | (String) The  group or a individual code to check status
+
+#### Status codes
+
+Code | Value
+--- | ---
+**0** | New (_initial_)
+**1** | Verified
+**2** | Completed
+
+#### Errors
+
+See standard REST errors for details.
+
+HTTP Code | Internal Code | Name | Description/Metadata
+--- | --- | --- | ---
+404 | 7.23.1.404 | commerce_svc.redemption_code.record_not_found | Will be thrown if you attempt to get status of code that is not found
+
+#### Group code example response. user\_id and title\_account\_id not present
+
+```
+{
+  "code":"TESTING",
+  "batch":{
+    "id":"6910861215640732739",
+    "campaign_id":"6666514275738935962",
+    "name":"Group Batch",
+    "batch_size":10,
+    "active":true,
+    "created_at":"2014-03-05T13:55:25Z",
+    "updated_at":"2014-03-05T13:55:25Z",
+    "individual":false,
+    "internal":false,
+    "codes_created":0,
+    "codes_used":0,
+    "lock_version":0,
+    "title_id":"6133718740452224656",
+    "campaign":{
+      "id":"6666514275738935962",
+      "title_id":"6133718740452224656",
+      "name":"Campaign 1",
+      "description":nil,
+      "start_date":"2014-03-02T13:55:24Z",
+      "end_date":"2014-03-08T13:55:24Z",
+      "enabled":true,
+      "max_redemptions":5,
+      "lock_version":0,
+      "codes_created":0,
+      "codes_used":0,
+      "created_at":"2014-03-05T13:55:25Z",
+      "updated_at":"2014-03-05T13:55:25Z",
+      "product_ids":[],
+      "products":[],
+      "entity_type":"campaign"
+    },
+    "entity_type":"batch"
+  },
+  "entity_type":"group_code"
+}
+```
+
+#### Group code example response. user\_id and title\_account\_id present
+
+```
+{
+  "code":"TESTING",
+  "batch":{
+    "id":"6630068939587910727",
+    "campaign_id":"8488398787414155604",
+    "name":"Group Batch",
+    "batch_size":10,
+    "active":true,
+    "created_at":"2014-03-05T14:03:52Z",
+    "updated_at":"2014-03-05T14:03:52Z",
+    "individual":false,
+    "internal":false,
+    "codes_created":0,
+    "codes_used":0,
+    "lock_version":0,
+    "title_id":"16376505741051326883",
+    "campaign":{
+      "id":"8488398787414155604",
+      "title_id":"16376505741051326883",
+      "name":"Campaign 1",
+      "description":nil,
+      "start_date":"2014-03-02T14:03:52Z",
+      "end_date":"2014-03-08T14:03:52Z",
+      "enabled":true,
+      "max_redemptions":5,
+      "lock_version":0,
+      "codes_created":0,
+      "codes_used":0,
+      "created_at":"2014-03-05T14:03:52Z",
+      "updated_at":"2014-03-05T14:03:52Z",
+      "product_ids":[],
+      "products":[],
+      "entity_type":"campaign"
+     },
+     "entity_type":"batch"
+   },
+   "entity_type":"group_code",
+   "individual_codes":[]
+}
+```
+
+#### Group code with individual codes example response
+
+```
+{
+  "code":"TESTING",
+  "batch":{
+    "id":"2489836920699410811",
+    "campaign_id":"7936421519888208312",
+    "name":"Group Batch",
+    "batch_size":10,
+    "active":true,
+    "created_at":"2014-03-05T14:28:24Z",
+    "updated_at":"2014-03-05T14:28:24Z",
+    "individual":false,
+    "internal":false,
+    "codes_created":1,
+    "codes_used":1,
+    "lock_version":2,
+    "title_id":"16804420775774951094",
+    "campaign":{
+      "id":"7936421519888208312",
+      "title_id":"16804420775774951094",
+      "name":"Campaign 1",
+      "description":nil,
+      "start_date":"2014-03-02T14:28:24Z",
+      "end_date":"2014-03-08T14:28:24Z",
+      "enabled":true,
+      "max_redemptions":5,
+      "lock_version":2,
+      "codes_created":1,
+      "codes_used":1,
+      "created_at":"2014-03-05T14:28:24Z",
+      "updated_at":"2014-03-05T14:28:24Z",
+      "product_ids":[
+        "6518120102738276245"
+        ],
+        "products":[{
+            "id":"6518120102738276245",
+            "name":"10 coins",
+            "created_at":"2014-03-05T14:28:24Z",
+            "updated_at":"2014-03-05T14:28:24Z",
+            "description":nil,
+            "preview_asset":nil,
+            "visibility":false,
+            "visibility_start_at":nil,
+            "visibility_end_at":nil,
+            "currency_id":"14966875724110328920",
+            "amount":10,
+            "title_id":"16804420775774951094",
+            "ios_app_store_identifier":nil,
+            "storefront_tags":[],
+            "price_ids":[],
+            "entity_type":"currency_offer"
+          }],
+          "entity_type":"campaign"
+        },
+        "entity_type":"batch"
+      },
+      "entity_type":"group_code",
+      "individual_codes":[{
+        "code":"e5gjnrngh57cxd7mefk6cemelrcchjjy",
+        "status":1,
+        "redeemed_at":"2014-03-05T14:28:24Z",
+        "fulfilled_at":nil,
+        "fulfillments":[{
+          "id":"13844159703670547019",
+          "fulfillable_id":"8523159926752101998",
+          "product_id":"6518120102738276245",
+          "state":"unfulfilled",
+          "failures":0,
+          "last_failed_at":nil,
+          "fulfilled_at":nil,
+          "created_at":"2014-03-05T14:28:24Z",
+          "updated_at":"2014-03-05T14:28:24Z",
+          "fulfillable_entity_type":"individual_code",
+          "entity_type":"fulfillment"
+        }],
+        "entity_type":"individual_code"
+    }]
+}
+```
+
+#### Individual code with status example response
+
+```
+{
+  "code":"1111222233334444",
+  "status":1,
+  "redeemed_at":"2014-03-05T14:37:45Z",
+  "fulfilled_at":nil,
+  "fulfillments":[],
+  "batch":{
+    "id":"13559110930229874985",
+    "campaign_id":"7697149713542086783",
+    "name":"Batch 1",
+    "batch_size":10,
+    "active":true,
+    "created_at":"2014-03-05T14:37:45Z",
+    "updated_at":"2014-03-05T14:37:45Z",
+    "individual":true,
+    "internal":false,
+    "codes_created":11,
+    "codes_used":1,
+    "lock_version":3,
+    "title_id":"3143711378372399579",
+    "campaign":{
+      "id":"7697149713542086783",
+      "title_id":"3143711378372399579",
+      "name":"Campaign 1",
+      "description":nil,
+      "start_date":"2014-03-02T14:37:45Z",
+      "end_date":"2014-03-08T14:37:45Z",
+      "enabled":true,
+      "max_redemptions":5,
+      "lock_version":3,
+      "codes_created":11,
+      "codes_used":1,
+      "created_at":"2014-03-05T14:37:45Z",
+      "updated_at":"2014-03-05T14:37:45Z",
+      "product_ids":[],
+      "products":[],
+      "entity_type":"campaign"
+    },
+    "entity_type":"batch"
+  },
+  "entity_type":"individual_code"
+}
+```
