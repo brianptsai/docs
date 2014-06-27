@@ -5,67 +5,99 @@ post_excerpt: ""
 layout: page
 permalink: /api-documentation/commerce-service/
 ---
-# Commerce Service
+<h1>Commerce Service</h1>
 
-## Price Data Types
+<h2>Price Data Types</h2>
 
 Price.amount and Transaction.paid_amount are exact decimal values and not floats. You may want to deserialize them as decimals in your client language.
 
-## Endpoints and Callbacks
+<h2>Endpoints and Callbacks</h2>
 
-* Currencies
-  * [GET /v1/commerce/currencies](#GET_/v1/commerce/currencies)
-  * [GET /v1/commerce/currencies/:id](#GET_/v1/commerce/currencies/:id)
-* Balances
-  * [GET /v1/commerce/balances](#GET_/v1/commerce/balances)
-  * [GET /v1/commerce/balances/title_accounts/:title_account_id/currencies/:currency_id](#GET_/v1/commerce/balances/title_accounts/:title_account_id/currencies/:currency_id)
-  * [POST /v1/commerce/balances/title_accounts/:title_account_id/currencies/:currency_id/credit](#POST_/v1/commerce/balances/title_accounts/:title_account_id/currencies/:currency_id/credit)
-  * [POST /v1/commerce/balances/title_accounts/:title_account_id/currencies/:currency_id/debit](#POST_/v1/commerce/balances/title_accounts/:title_account_id/currencies/:currency_id/debit)
-* Transactions
-  * [GET /v1/commerce/transactions](#GET_/v1/commerce/transactions)
-  * [GET /v1/commerce/transactions/:id](#GET_/v1/commerce/transactions/:id)
-  * [POST /v1/commerce/transactions](#POST_/v1/commerce/transactions)
-  * [POST /v1/commerce/transactions/:id/record_receipt](#POST_/v1/commerce/transactions/:id/record_receipt)
-  * [POST /v1/commerce/transactions/:id/release](#POST_/v1/commerce/transactions/:id/release)
-  * [POST [external_inventory_callback]](#POST_[external_inventory_callback])
-* Catalogs
-  * [GET /v1/commerce/catalogs/:id/present](#GET_/v1/commerce/catalogs/:id/present)
-* Products
-  * [GET /v1/commerce/products/:id](#GET_/v1/commerce/products/:id)
-* Redemptions
-  * [GET /v1/commerce/redemption_codes?filter[user_id]](#GET_/v1/commerce/redemption_codes?filter[user_id])
-  * [GET /v1/commerce/redemption_codes/:code/status](#GET_/v1/commerce/redemption_codes/:code/status)
-  * [POST /v1/commerce/redemption_codes/:code/redeem](#GET_/v1/commerce/redemption_codes/:code/redeem)
+<ul>
+<li>Currencies
 
-## Currencies
+<ul>
+<li><a href="#GET_/v1/commerce/currencies">GET /v1/commerce/currencies</a></li>
+<li><a href="#GET_/v1/commerce/currencies/:id">GET /v1/commerce/currencies/:id</a></li>
+</ul></li>
+<li>Balances
 
-### Description
+<ul>
+<li><a href="#GET_/v1/commerce/balances">GET /v1/commerce/balances</a></li>
+<li><a href="#GET_/v1/commerce/balances/title_accounts/:title_account_id/currencies/:currency_id">GET /v1/commerce/balances/title_accounts/:title_account_id/currencies/:currency_id</a></li>
+<li><a href="#POST_/v1/commerce/balances/title_accounts/:title_account_id/currencies/:currency_id/credit">POST /v1/commerce/balances/title_accounts/:title_account_id/currencies/:currency_id/credit</a></li>
+<li><a href="#POST_/v1/commerce/balances/title_accounts/:title_account_id/currencies/:currency_id/debit">POST /v1/commerce/balances/title_accounts/:title_account_id/currencies/:currency_id/debit</a></li>
+</ul></li>
+<li>Transactions
+
+<ul>
+<li><a href="#GET_/v1/commerce/transactions">GET /v1/commerce/transactions</a></li>
+<li><a href="#GET_/v1/commerce/transactions/:id">GET /v1/commerce/transactions/:id</a></li>
+<li><a href="#POST_/v1/commerce/transactions">POST /v1/commerce/transactions</a></li>
+<li><a href="#POST_/v1/commerce/transactions/:id/record_receipt">POST /v1/commerce/transactions/:id/record_receipt</a></li>
+<li><a href="#POST_/v1/commerce/transactions/:id/release">POST /v1/commerce/transactions/:id/release</a></li>
+<li><a href="#POST_[external_inventory_callback]">POST [external_inventory_callback]</a></li>
+</ul></li>
+<li>Catalogs
+
+<ul>
+<li><a href="#GET_/v1/commerce/catalogs/:id/present">GET /v1/commerce/catalogs/:id/present</a></li>
+</ul></li>
+<li>Products
+
+<ul>
+<li><a href="#GET_/v1/commerce/products/:id">GET /v1/commerce/products/:id</a></li>
+</ul></li>
+<li>Redemptions
+
+<ul>
+<li><a href="#GET_/v1/commerce/redemption_codes?filter[user_id]">GET /v1/commerce/redemption_codes?filter[user_id]</a></li>
+<li><a href="#GET_/v1/commerce/redemption_codes/:code/status">GET /v1/commerce/redemption_codes/:code/status</a></li>
+<li><a href="#GET_/v1/commerce/redemption_codes/:code/redeem">POST /v1/commerce/redemption_codes/:code/redeem</a></li>
+</ul></li>
+</ul>
+
+<h2>Currencies</h2>
+
+<h3>Description</h3>
 
 Currency entities represent either a real or virtual currency which is scoped to a particular title. You can create and update virtual currencies from the admin. Real currencies are immutable.
 
-### <a name="GET_/v1/commerce/currencies"></a>GET /v1/commerce/currencies
+<h3><a name="GET_/v1/commerce/currencies"></a>GET /v1/commerce/currencies</h3>
 
-#### Description
+<h4>Description</h4>
 
 Retrieve a list of all currencies in the system.
 
-#### Parameters
+<h4>Parameters</h4>
 
-Parameter Name | Description
---- | --- 
-**page**<br>_optional_ | The requested page number of results (default: `1`).
-**per_page**<br>_optional_ | The requested number of results per page (default: `25`).
+<table>
+<thead>
+<tr>
+  <th>Parameter Name</th>
+  <th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>page</strong><br>_optional_</td>
+  <td>The requested page number of results (default: <code>1</code>).</td>
+</tr>
+<tr>
+  <td><strong>per_page</strong><br>_optional_</td>
+  <td>The requested number of results per page (default: <code>25</code>).</td>
+</tr>
+</tbody>
+</table>
 
-#### Example Request
+<h4>Example Request</h4>
 
-```
-GET https://api.example.com/v1/commerce/currencies?page=1&per_page=2
-```
+<pre><code>GET https://api.example.com/v1/commerce/currencies?page=1&amp;per_page=2
+</code></pre>
 
-#### Response
+<h4>Response</h4>
 
-```
-{ 
+<pre><code>{ 
   "data": [
     {
       "id": "593057625495",
@@ -93,36 +125,32 @@ GET https://api.example.com/v1/commerce/currencies?page=1&per_page=2
     "total": 4
   }
 }
-```
+</code></pre>
 
-#### Errors
+<h4>Errors</h4>
 
 See standard REST errors for details.
 
+<h4>Notes</h4>
 
-#### Notes
+<h3><a name="GET_/v1/commerce/currencies/:id"></a>GET /v1/commerce/currencies/:id</h3>
 
-### <a name="GET_/v1/commerce/currencies/:id"></a>GET /v1/commerce/currencies/:id
-
-#### Description
+<h4>Description</h4>
 
 Retrieve a single currency in the system
 
-#### Parameters
+<h4>Parameters</h4>
 
 None
 
-#### Example Request
+<h4>Example Request</h4>
 
-```
-GET https://api.example.com/v1/commerce/currencies/980938902332
-```
+<pre><code>GET https://api.example.com/v1/commerce/currencies/980938902332
+</code></pre>
 
+<h4>Example Response</h4>
 
-#### Example Response
-
-```
-{ 
+<pre><code>{ 
   "data": {
     "id": "593057625495",
     "name": "USD",
@@ -133,20 +161,34 @@ GET https://api.example.com/v1/commerce/currencies/980938902332
     "entity_type": "currency"
    }
 }
-```
+</code></pre>
 
+<h4>Errors</h4>
 
-#### Errors
+<table>
+<thead>
+<tr>
+  <th>HTTP Code</th>
+  <th>Internal Code</th>
+  <th>Name</th>
+  <th>Description/Metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>404</td>
+  <td>TBA</td>
+  <td>Not found</td>
+  <td>The requested object could not be found in the system.</td>
+</tr>
+</tbody>
+</table>
 
-HTTP Code | Internal Code | Name | Description/Metadata
---- | --- | --- | ---
-404 | TBA | Not found | The requested object could not be found in the system. |
-
-#### Notes
+<h4>Notes</h4>
 
 None
 
-## Balances
+<h2>Balances</h2>
 
 A Balance is the amount of Currency a Title Account has. Balances can only exist for virtual Currencies. There is only one Balance for each Title Account / Currency pair. Each Balance has two sub-balances, purchased and earned. The purchased balance is the currency that has been bought with real currency (USD, EUR, etc). The earned balance is the currency that has been earned through playing the game.
 
@@ -154,24 +196,39 @@ You cannot update any property on a Balance directly. You control the balances o
 
 Transactions will affect balances as well. VirtualTransactions remove currency from a balance, and purchased Currency Offers will put currency either in the earned or purchased sub-balance.
 
-### <a name="GET_/v1/commerce/balances"></a>GET /v1/commerce/balances
+<h3><a name="GET_/v1/commerce/balances"></a>GET /v1/commerce/balances</h3>
 
-#### Example Request
+<h4>Example Request</h4>
 
-```
-GET https://api.example.com/v1/commerce/balances?page=1&per_page=2&filter[title_account_id]=93040942234
-```
+<pre><code>GET https://api.example.com/v1/commerce/balances?page=1&amp;per_page=2&amp;filter[title_account_id]=93040942234
+</code></pre>
 
-Parameter Name | Description
---- | --- 
-**filter**<br>_required_ | As with all index routes, we have a filter parameter. However you are REQUIRED to filter by title_account_id for this route! Ex. ...balances?filter[title_account_id]=19829829832
-**page**<br>_optional_ | The requested page number of results (default: `1`).
-**per_page**<br>_optional_ | The requested number of results per page (default: `25`).
+<table>
+<thead>
+<tr>
+  <th>Parameter Name</th>
+  <th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>filter</strong><br>_required_</td>
+  <td>As with all index routes, we have a filter parameter. However you are REQUIRED to filter by title_account_id for this route! Ex. ...balances?filter[title_account_id]=19829829832</td>
+</tr>
+<tr>
+  <td><strong>page</strong><br>_optional_</td>
+  <td>The requested page number of results (default: <code>1</code>).</td>
+</tr>
+<tr>
+  <td><strong>per_page</strong><br>_optional_</td>
+  <td>The requested number of results per page (default: <code>25</code>).</td>
+</tr>
+</tbody>
+</table>
 
-#### Example Response
+<h4>Example Response</h4>
 
-```
-{
+<pre><code>{
   "data": [
     {
       "id": "434939434234",
@@ -205,20 +262,18 @@ Parameter Name | Description
     "total": 4
   }
 }
-```
+</code></pre>
 
-### <a name="GET_/v1/commerce/balances/title_accounts/:title_account_id/currencies/:currency_id"></a>GET /v1/commerce/balances/title_accounts/:title_account_id/currencies/:currency_id
+<h3><a name="GET_/v1/commerce/balances/title_accounts/:title_account_id/currencies/:currency_id"></a>GET /v1/commerce/balances/title_accounts/:title_account_id/currencies/:currency_id</h3>
 
-#### Example Request
+<h4>Example Request</h4>
 
-```
-GET https://api.example.com/v1/commerce/balances/title_accounts/93040942234/currencies/323901293823
-```
+<pre><code>GET https://api.example.com/v1/commerce/balances/title_accounts/93040942234/currencies/323901293823
+</code></pre>
 
-#### Example Response
+<h4>Example Response</h4>
 
-```
-{
+<pre><code>{
   "data": {
     "id": "434939434234",
     "user_id": "9083482094234",
@@ -232,14 +287,13 @@ GET https://api.example.com/v1/commerce/balances/title_accounts/93040942234/curr
     "entity_type": "balance"
   }
 }
-```
+</code></pre>
 
-### <a name="POST_/v1/commerce/balances/title_accounts/:title_account_id/currencies/:currency_id/credit"></a>POST /v1/commerce/balances/title_accounts/:title_account_id/currencies/:currency_id/credit
+<h3><a name="POST_/v1/commerce/balances/title_accounts/:title_account_id/currencies/:currency_id/credit"></a>POST /v1/commerce/balances/title_accounts/:title_account_id/currencies/:currency_id/credit</h3>
 
-#### Example Request
+<h4>Example Request</h4>
 
-```
-POST https://api.example.com/v1/commerce/balances/title_accounts/93040942234/currencies/323901293823/credit
+<pre><code>POST https://api.example.com/v1/commerce/balances/title_accounts/93040942234/currencies/323901293823/credit
 
 {
   "data": {
@@ -247,12 +301,11 @@ POST https://api.example.com/v1/commerce/balances/title_accounts/93040942234/cur
     "amount": 50
   }
 }
-```
+</code></pre>
 
-#### Example Response
+<h4>Example Response</h4>
 
-```
-{
+<pre><code>{
   "data": {
     "id": "434939434234",
     "user_id": "9083482094234",
@@ -266,31 +319,30 @@ POST https://api.example.com/v1/commerce/balances/title_accounts/93040942234/cur
     "entity_type": "balance"
   }
 }
-```
+</code></pre>
 
-#### Notes
+<h4>Notes</h4>
+
 You can credit only the 'earned' sub-balance.
 
-### <a name="POST_/v1/commerce/balances/title_accounts/:title_account_id/currencies/:currency_id/debit"></a>POST /v1/commerce/balances/title_accounts/:title_account_id/currencies/:currency_id/debit
+<h3><a name="POST_/v1/commerce/balances/title_accounts/:title_account_id/currencies/:currency_id/debit"></a>POST /v1/commerce/balances/title_accounts/:title_account_id/currencies/:currency_id/debit</h3>
 
-##### Example Request
+<h5>Example Request</h5>
 
 Assuming our Balance already has purchased sub-balance of 40 currency units, and an earned sub-balance of 40 currency units, we want to debit 40 units of currency. It will first debit from purchased up to the max of the purchased sub-balance, and then the remaining amount form earned.
 
-```
-POST https://api.example.com/v1/commerce/balances/title_accounts/93040942234/currencies/323901293823/debit
+<pre><code>POST https://api.example.com/v1/commerce/balances/title_accounts/93040942234/currencies/323901293823/debit
 
 {
   "data": {
     "amount": 50
   }
 }
-```
+</code></pre>
 
-##### Example Response (debiting total)
+<h5>Example Response (debiting total)</h5>
 
-```
-{
+<pre><code>{
   "data": {
     "id": "434939434234",
     "user_id": "9083482094234",
@@ -304,66 +356,91 @@ POST https://api.example.com/v1/commerce/balances/title_accounts/93040942234/cur
     "entity_type": "balance"
   }
 }
-```
+</code></pre>
 
-#### Notes
+<h4>Notes</h4>
 
 This route will create the Balance entity if it does not exist.
 
-#### Errors
+<h4>Errors</h4>
 
 See standard REST errors for details.
 
-HTTP Code | Internal Code | Name | Description/Metadata
---- | --- | --- | ---
-500 | 7.2.202.500 | commerce_svc.balance.insufficient_funds | Will be thrown if you attempt to debit a balance with a greater amount than the balance contains.
+<table>
+<thead>
+<tr>
+  <th>HTTP Code</th>
+  <th>Internal Code</th>
+  <th>Name</th>
+  <th>Description/Metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>500</td>
+  <td>7.2.202.500</td>
+  <td>commerce_svc.balance.insufficient_funds</td>
+  <td>Will be thrown if you attempt to debit a balance with a greater amount than the balance contains.</td>
+</tr>
+</tbody>
+</table>
 
-## Transactions
+<h2>Transactions</h2>
 
 Transactions represent the purchase of a Product by a Title Account in a Currency from a payment provider. There are only two supported payment providers currently:
 
-* ``platform``: The SGE platform commerce service, which debits the price of product in virtual currency from the title account's balance.
-* ``ios_app_store``: Apple's iOS App Store
+<ul>
+<li><code>platform</code>: The SGE platform commerce service, which debits the price of product in virtual currency from the title account's balance.</li>
+<li><code>ios_app_store</code>: Apple's iOS App Store</li>
+</ul>
 
 There are two entity types for transactions: VirtualTransaction and RealTransaction.
 
-### VirtualTransactions
+<h3>VirtualTransactions</h3>
 
 A VirtualTransaction is one fulfilled in the virtual currency managed by the platform. At any point in time, every VirtualTransaction it is one and only one of the following states:
 
-* __verified__: In order to be created, the VirtualTransaction must be valid. Attempts to create an invalid VirtualTransaction will fail. Thus the VirtualTransactions starts in the verified state. The user has enough currency
-* __fulfilled__: The Transaction has been verified and the product has been fulfilled to the Title Account.
+<ul>
+<li><strong>verified</strong>: In order to be created, the VirtualTransaction must be valid. Attempts to create an invalid VirtualTransaction will fail. Thus the VirtualTransactions starts in the verified state. The user has enough currency</li>
+<li><strong>fulfilled</strong>: The Transaction has been verified and the product has been fulfilled to the Title Account.</li>
+</ul>
 
-### RealTransactions
+<h3>RealTransactions</h3>
 
 A RealTransaction is one that takes place with a real currency with an external payment provider. At any point in time, every RealTransaction it is one and only one of the following states:
 
-* __reserved__: Initial state. The state the title account is guaranteed to receive this product, if it is later successfully verified and fulfilled.
-* __received_receipt__: The platform has received the receipt via [POST /v1/commerce/transactions/:id/record_receipt](#POST_/v1/commerce/transactions/:id/record_receipt).
-* __released__: The Transaction was initially reserved, but was explicitly canceled by the client. A transaction can only be canceled via the <a name="POST_/v1/commerce/transactions/:id/release"></a>POST /v1/commerce/transactions/:id/release endpoint. 
-* __verified__: The Transaction has been verified with the IOS App Store. It is waiting to become fulfilled.
-* __invalidated__: The IOS App Store has informed us the receipt is not valid. This can happen because of a code error, or a malicious user attempt. The Transaction cannot be moved to a different state.
-* __fulfilled__: The Transaction has been verified and the product has been fulfilled to the Title Account.
+<ul>
+<li><strong>reserved</strong>: Initial state. The state the title account is guaranteed to receive this product, if it is later successfully verified and fulfilled.</li>
+<li><strong>received_receipt</strong>: The platform has received the receipt via <a href="#POST_/v1/commerce/transactions/:id/record_receipt">POST /v1/commerce/transactions/:id/record_receipt</a>.</li>
+<li><strong>released</strong>: The Transaction was initially reserved, but was explicitly canceled by the client. A transaction can only be canceled via the <a name="POST_/v1/commerce/transactions/:id/release"></a>POST /v1/commerce/transactions/:id/release endpoint. </li>
+<li><strong>verified</strong>: The Transaction has been verified with the IOS App Store. It is waiting to become fulfilled.</li>
+<li><strong>invalidated</strong>: The IOS App Store has informed us the receipt is not valid. This can happen because of a code error, or a malicious user attempt. The Transaction cannot be moved to a different state.</li>
+<li><strong>fulfilled</strong>: The Transaction has been verified and the product has been fulfilled to the Title Account.</li>
+</ul>
 
-### Fulfillment
+<h3>Fulfillment</h3>
 
 Fulfillment happens the same for both RealTransactions and VirtualTransactions. However, it happens differently for different product types:
 
-* __Items__: The external inventory callback is called with the Transaction data. This is simply a POST call back to your game server. You must respond with a 200 status.
-* __Currency Offers__: The amount of Currency in the offer is automatically credited to the purchased sub-balance of the Balance for the Title Account specified on the transaction.
-* __Bundles__: The above happens for each item in the bundle, sequentially. You will receive multiple callbacks if you have multiple items in a bundle.
+<ul>
+<li><strong>Items</strong>: The external inventory callback is called with the Transaction data. This is simply a POST call back to your game server. You must respond with a 200 status.</li>
+<li><strong>Currency Offers</strong>: The amount of Currency in the offer is automatically credited to the purchased sub-balance of the Balance for the Title Account specified on the transaction.</li>
+<li><strong>Bundles</strong>: The above happens for each item in the bundle, sequentially. You will receive multiple callbacks if you have multiple items in a bundle.</li>
+</ul>
 
 Currently, verification happens synchronously within the transaction. There is no retry or background processing. Any failures fail permanently and the transaction must be abandoned.
 
 Fulfillments, on the other hand DO have a retry mechanism in place. A transaction that has been verified will remain in the verified state until all fulfillments have been successfully granted, at which time the transaction will be marked as complete. The retry schedule is as follows:
 
-* 1 instant retry
-* 1 retry every 30 seconds x12 (first 6 minutes)
-* 1 retry every 60 seconds x12 (next 12 minutes)
-* 1 retry every 5 minutes x12 (next hour)
-* 1 retry every 15 minutes x12 (next 3 hours)
-* 1 retry every 30 minutes x12 (next 6 hours)
-* 1 retry every 60 minutes x40 (next 40 hours)
+<ul>
+<li>1 instant retry</li>
+<li>1 retry every 30 seconds x12 (first 6 minutes)</li>
+<li>1 retry every 60 seconds x12 (next 12 minutes)</li>
+<li>1 retry every 5 minutes x12 (next hour)</li>
+<li>1 retry every 15 minutes x12 (next 3 hours)</li>
+<li>1 retry every 30 minutes x12 (next 6 hours)</li>
+<li>1 retry every 60 minutes x40 (next 40 hours)</li>
+</ul>
 
 Given the above, failed actions will remain in retry queue for a little more than 2 days and will end up being retried 101 times. If it does not succeed in this timeframe, then it is logged to disk where it can be reviewed and re-published manually if needed.
 
@@ -371,26 +448,41 @@ Transactions for items will normally be fulfilled to the External Inventory Call
 
 The fulfillment array on the transaction represent the fulfillment that was done. Only for transactions against bundles will there be more than one fulfillment. The fulfillments will only appear once the transaction is moved into the verified state.
 
-### <a name="GET_/v1/commerce/transactions"></a>GET /v1/commerce/transactions
-#### Description
+<h3><a name="GET_/v1/commerce/transactions"></a>GET /v1/commerce/transactions</h3>
+
+<h4>Description</h4>
+
 Returns a list of transaction for the logged in user.
-#### Parameters
 
-Parameter Name | Description
---- | ---
-**page**<br>_optional_ | The requested page number of results (default: `1`).
-**per_page**<br>_optional_ | The requested number of results per page (default: `25`).
+<h4>Parameters</h4>
 
-#### Example Request
+<table>
+<thead>
+<tr>
+  <th>Parameter Name</th>
+  <th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>page</strong><br>_optional_</td>
+  <td>The requested page number of results (default: <code>1</code>).</td>
+</tr>
+<tr>
+  <td><strong>per_page</strong><br>_optional_</td>
+  <td>The requested number of results per page (default: <code>25</code>).</td>
+</tr>
+</tbody>
+</table>
 
-```
-GET /v1/commerce/transactions
-```
+<h4>Example Request</h4>
 
-#### Example Response
+<pre><code>GET /v1/commerce/transactions
+</code></pre>
 
-```
-{
+<h4>Example Response</h4>
+
+<pre><code>{
   "data": [
     {
       "id": "16929286095722690145",
@@ -427,22 +519,22 @@ GET /v1/commerce/transactions
     "total":1
   }
 }
-```
+</code></pre>
 
-### <a name="GET_/v1/commerce/transactions/:id"></a>GET /v1/commerce/transactions/:id
-#### Description
+<h3><a name="GET_/v1/commerce/transactions/:id"></a>GET /v1/commerce/transactions/:id</h3>
+
+<h4>Description</h4>
+
 Shows the current state of  transaction.
 
-#### Example Request
+<h4>Example Request</h4>
 
-```
-GET /v1/commerce/transactions/3446010522836258124
-```
+<pre><code>GET /v1/commerce/transactions/3446010522836258124
+</code></pre>
 
-#### Example Response for VirtualTransaction in __fulfilled__ state, single product
+<h4>Example Response for VirtualTransaction in <strong>fulfilled</strong> state, single product</h4>
 
-```
-{
+<pre><code>{
   "data": {
     "id": "3446010522836258124",
     "user_id": "9083482094234",
@@ -496,12 +588,11 @@ GET /v1/commerce/transactions/3446010522836258124
     "entity_type": "virtual_transaction"
   }
 }
-```
+</code></pre>
 
-#### Example Response for RealTransaction in __reserved__ state, single product
+<h4>Example Response for RealTransaction in <strong>reserved</strong> state, single product</h4>
 
-```
-{
+<pre><code>{
   "data": {
     "id": "3446010522836258124",
     "user_id": "9083482094234",
@@ -549,14 +640,17 @@ GET /v1/commerce/transactions/3446010522836258124
     "entity_type": "real_transaction"
   }
 }
-```
+</code></pre>
 
-#### Deprecation
-* ``transaction_id`` is deprecated on fulfillment entities. Use ``fulfillable_id`` instead.
+<h4>Deprecation</h4>
 
-#### Example Response for RealTransaction with __bundled product__
-```
-{
+<ul>
+<li><code>transaction_id</code> is deprecated on fulfillment entities. Use <code>fulfillable_id</code> instead.</li>
+</ul>
+
+<h4>Example Response for RealTransaction with <strong>bundled product</strong></h4>
+
+<pre><code>{
   "id":"14655480867734606115",
   "title_account_id":"6637181824021141103",
   "product_id":"13265025162150368708",
@@ -641,26 +735,25 @@ GET /v1/commerce/transactions/3446010522836258124
   "fulfillments":[],
   "entity_type":"real_transaction"
 }
-```
+</code></pre>
 
-### <a name="POST_/v1/commerce/transactions"></a>POST /v1/commerce/transactions
+<h3><a name="POST_/v1/commerce/transactions"></a>POST /v1/commerce/transactions</h3>
 
-#### VirtualTransactions Example
+<h4>VirtualTransactions Example</h4>
 
-##### Description
+<h5>Description</h5>
 
-Creates and fulfills a VirtualTransactions. The ```title_account_id```, ```product_id```, ```currency_id``` must all reference existing entities. The specified currency must be a virtual currency. 
+Creates and fulfills a VirtualTransactions. The <code>title_account_id</code>, <code>product_id</code>, <code>currency_id</code> must all reference existing entities. The specified currency must be a virtual currency.
 
-The ```paid_amount``` argument must match the ```final_amount``` for the product in the specified currency. ```final_amount``` is a decoration on Prices in the [GET /v1/commerce/catalogs/:id/present](#GET_/v1/commerce/catalogs/:id/present) route.
+The <code>paid_amount</code> argument must match the <code>final_amount</code> for the product in the specified currency. <code>final_amount</code> is a decoration on Prices in the <a href="#GET_/v1/commerce/catalogs/:id/present">GET /v1/commerce/catalogs/:id/present</a> route.
 
-```catalog_id``` and ```collection_id``` are optional arguments which must match the catalog and collection that the product was bought out of. *ONLY* if collection_id is specified will the ```paid_amount``` expect to be the final_amount price from any active Promotion. Without it, the unpromoted price will be used even if there is an active promotion on the product. Also, sending them when creating the transaction will give you more analytics info on transactions.
+<code>catalog_id</code> and <code>collection_id</code> are optional arguments which must match the catalog and collection that the product was bought out of. <em>ONLY</em> if collection_id is specified will the <code>paid_amount</code> expect to be the final_amount price from any active Promotion. Without it, the unpromoted price will be used even if there is an active promotion on the product. Also, sending them when creating the transaction will give you more analytics info on transactions.
 
-If the transaction contains an item, it will be synchronously added to the external inventory via [POST [external_inventory_callback]](#POST_[external_inventory_callback]).
+If the transaction contains an item, it will be synchronously added to the external inventory via <a href="#POST_[external_inventory_callback]">POST [external_inventory_callback]</a>.
 
-##### Example Request
+<h5>Example Request</h5>
 
-```
-POST /v1/commerce/transactions
+<pre><code>POST /v1/commerce/transactions
 {
   "data": {
     "entity_type": "virtual_transaction",
@@ -673,12 +766,11 @@ POST /v1/commerce/transactions
     "paid_amount": 9
   }
 }
-```
+</code></pre>
 
-##### Example Response
+<h5>Example Response</h5>
 
-```
-{
+<pre><code>{
   "data": {
     "id": "390890389427394234",
     "user_id": "9083482094234",
@@ -715,24 +807,26 @@ POST /v1/commerce/transactions
     "entity_type": "virtual_transaction"
   }
 }
-```
+</code></pre>
 
-##### Deprecation
-* ``transaction_id`` is deprecated on fulfillment entities. Use ``fulfillable_id`` instead.
+<h5>Deprecation</h5>
 
-#### RealTransaction Example
+<ul>
+<li><code>transaction_id</code> is deprecated on fulfillment entities. Use <code>fulfillable_id</code> instead.</li>
+</ul>
 
-##### Description
+<h4>RealTransaction Example</h4>
 
-This transaction is only put into the reserved state, until it is later confirmed with the [POST /v1/commerce/transactions/:id/record_receipt](#POST_/v1/commerce/transactions/:id/record_receipt) route.
-Creates a RealTransaction. The ```title_account_id``` and ```product_id``` must all reference existing entities.
+<h5>Description</h5>
 
-```catalog_id``` and ```collection_id``` are optional arguments which must match the catalog and collection that the product was bought out of. Specifying them will not affect the paid_amount when you record the receipt, since Promotions do not currently apply to RealTransactions. Also, sending them when creating the transaction will give you more analytics info on transactions.
+This transaction is only put into the reserved state, until it is later confirmed with the <a href="#POST_/v1/commerce/transactions/:id/record_receipt">POST /v1/commerce/transactions/:id/record_receipt</a> route.
+Creates a RealTransaction. The <code>title_account_id</code> and <code>product_id</code> must all reference existing entities.
 
-##### Example Request
+<code>catalog_id</code> and <code>collection_id</code> are optional arguments which must match the catalog and collection that the product was bought out of. Specifying them will not affect the paid_amount when you record the receipt, since Promotions do not currently apply to RealTransactions. Also, sending them when creating the transaction will give you more analytics info on transactions.
 
-```
-POST /v1/commerce/transactions
+<h5>Example Request</h5>
+
+<pre><code>POST /v1/commerce/transactions
 {
   "data": {
     "entity_type": "real_transaction",
@@ -742,11 +836,11 @@ POST /v1/commerce/transactions
     "product_id": "6919315393507255133"
   }
 }
-```
+</code></pre>
 
-##### Example Response
-```
-{
+<h5>Example Response</h5>
+
+<pre><code>{
   "data": {
     "id": "6444802717456406686",
     "user_id": "9083482094234",
@@ -773,37 +867,62 @@ POST /v1/commerce/transactions
     "entity_type": "real_transaction"
   }
 }
-```
+</code></pre>
 
-### <a name="POST_/v1/commerce/transactions/:id/record_receipt"></a>POST /v1/commerce/transactions/:id/record_receipt
-#### Description
+<h3><a name="POST_/v1/commerce/transactions/:id/record_receipt"></a>POST /v1/commerce/transactions/:id/record_receipt</h3>
+
+<h4>Description</h4>
 
 This endpoint is only valid for RealTransactions, which are currently only for iOS App Store transactions.
 
 This endpoint requires you to have already created a RealTransaction in the reserved state. After you have completed the transaction with the iOS App Store, you need to callback with the iOS App Store receipt to finish the transaction. The platform will then verify the receipt with Apple and fulfill your product.
 
-Parameter Name | Description
---- | --- 
-**currency_id** _required_ | (UUID) The id of a real currency entity that the product was purchased in.
-**paid_amount** _required_ | (Number) The amount that was paid by the user in the specified currency. You must fetch this from the iOS IAP API on the device and return it.
-**receipt** _required_     | (String) The receipt returned by the iOS IAP transaction.
-**external_transaction_identifer** _required_  | (String) The identifer from the iOS IAP SKTransaction object.
-**transaction_time** _required_  | (Timestamp) When the transaction actually occurred with the iOS App Store. You can fetch this from the iOS IAP API.
+<table>
+<thead>
+<tr>
+  <th>Parameter Name</th>
+  <th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>currency_id</strong> <em>required</em></td>
+  <td>(UUID) The id of a real currency entity that the product was purchased in.</td>
+</tr>
+<tr>
+  <td><strong>paid_amount</strong> <em>required</em></td>
+  <td>(Number) The amount that was paid by the user in the specified currency. You must fetch this from the iOS IAP API on the device and return it.</td>
+</tr>
+<tr>
+  <td><strong>receipt</strong> <em>required</em></td>
+  <td>(String) The receipt returned by the iOS IAP transaction.</td>
+</tr>
+<tr>
+  <td><strong>external_transaction_identifer</strong> <em>required</em></td>
+  <td>(String) The identifer from the iOS IAP SKTransaction object.</td>
+</tr>
+<tr>
+  <td><strong>transaction_time</strong> <em>required</em></td>
+  <td>(Timestamp) When the transaction actually occurred with the iOS App Store. You can fetch this from the iOS IAP API.</td>
+</tr>
+</tbody>
+</table>
 
-If the transaction contains an item, it will be synchronously added to the external inventory via [POST [external_inventory_callback]](#POST_[external_inventory_callback]).
+If the transaction contains an item, it will be synchronously added to the external inventory via <a href="#POST_[external_inventory_callback]">POST [external_inventory_callback]</a>.
 
-The platform will first try Apple's production verification url, https://buy.itunes.apple.com/verifyReceipt, to verify your receipt. If the receipt is a sandbox receipt, it will attempt to verification with Apple's sandbox verification url, https://sandbox.itunes.apple.com/verifyReceipt, instead. The programmer should not have to change any code on their device when testing purchases with ITunes Test Users vs. testing with real ITunes users. The __ios_app_store_verification_url__ field on the RealTransaction entity will say which environment was used to verify the receipt.
+The platform will first try Apple's production verification url, https://buy.itunes.apple.com/verifyReceipt, to verify your receipt. If the receipt is a sandbox receipt, it will attempt to verification with Apple's sandbox verification url, https://sandbox.itunes.apple.com/verifyReceipt, instead. The programmer should not have to change any code on their device when testing purchases with ITunes Test Users vs. testing with real ITunes users. The <strong>ios_app_store_verification_url</strong> field on the RealTransaction entity will say which environment was used to verify the receipt.
 
-* If Apple says the receipt is valid, the transaction will move into the __verified__ state, and the platform will attempt to fulfill the transaction.
-* If Apple says the receipt is invalid, the transaction will move permanently into the __invalidated__ state.
-* If Apple verification fails for any other reason, such as network error, the transaction will remain in the __received_receipt__ state
+<ul>
+<li>If Apple says the receipt is valid, the transaction will move into the <strong>verified</strong> state, and the platform will attempt to fulfill the transaction.</li>
+<li>If Apple says the receipt is invalid, the transaction will move permanently into the <strong>invalidated</strong> state.</li>
+<li>If Apple verification fails for any other reason, such as network error, the transaction will remain in the <strong>received_receipt</strong> state</li>
+</ul>
 
 There is no retry of Apple verification attempts. If the verification fails it cannot be retried.
 
-#### Example Request
+<h4>Example Request</h4>
 
-```
-POST /v1/commerce/transactions/92392832323123/record_receipt
+<pre><code>POST /v1/commerce/transactions/92392832323123/record_receipt
 
 { 
   "data": { 
@@ -814,12 +933,11 @@ POST /v1/commerce/transactions/92392832323123/record_receipt
     "external_transaction_identifier": "9737AB34DEF"
   }
 }
-```
+</code></pre>
 
-#### Example Response
+<h4>Example Response</h4>
 
-```
-{ 
+<pre><code>{ 
   "data": {
     "id": "6444802717456406686",
     "user_id": "9083482094234",
@@ -865,28 +983,30 @@ POST /v1/commerce/transactions/92392832323123/record_receipt
     "entity_type": "real_transaction"
   }
 }
-```
+</code></pre>
 
-#### Deprecation
-* ``transaction_id`` is deprecated on fulfillment entities. Use ``fulfillable_id`` instead.
+<h4>Deprecation</h4>
 
-### <a name="POST_/v1/commerce/transactions/:id/release"></a>POST /v1/commerce/transactions/:id/release
-#### Description
+<ul>
+<li><code>transaction_id</code> is deprecated on fulfillment entities. Use <code>fulfillable_id</code> instead.</li>
+</ul>
 
-This endpoint is only valid for RealTransactions in the __reserved__ state.
+<h3><a name="POST_/v1/commerce/transactions/:id/release"></a>POST /v1/commerce/transactions/:id/release</h3>
 
-This call places the transaction in the __released__ state, indicating the system is no longer excepting to receive an Apple Store receipt for this transaction. Generally you will want to do this when the user cancels the purchase at the payment step.
+<h4>Description</h4>
 
-#### Example Request
+This endpoint is only valid for RealTransactions in the <strong>reserved</strong> state.
 
-```
-POST /v1/commerce/transactions/92392832323123/release
-```
+This call places the transaction in the <strong>released</strong> state, indicating the system is no longer excepting to receive an Apple Store receipt for this transaction. Generally you will want to do this when the user cancels the purchase at the payment step.
 
-#### Example Response
+<h4>Example Request</h4>
 
-```
-{ 
+<pre><code>POST /v1/commerce/transactions/92392832323123/release
+</code></pre>
+
+<h4>Example Response</h4>
+
+<pre><code>{ 
   "data": {
     "id": "6444802717456406686",
     "user_id": "9083482094234",
@@ -917,35 +1037,40 @@ POST /v1/commerce/transactions/92392832323123/release
     "entity_type": "real_transaction"
   }
 }
-```
+</code></pre>
 
-### <a name="POST_[external_inventory_callback]"></a>POST [external_inventory_callback]
+<h3><a name="POST_[external_inventory_callback]"></a>POST [external_inventory_callback]</h3>
 
-Any time an transaction containing an item is in the __verified__ state, the platform will attempt to add the item to the external inventory. Adding to the external inventory happens via a HTTP POST callback, which returns a json object containing 1) the transaction that contains the item 2) the item to be added. 
+Any time an transaction containing an item is in the <strong>verified</strong> state, the platform will attempt to add the item to the external inventory. Adding to the external inventory happens via a HTTP POST callback, which returns a json object containing 1) the transaction that contains the item 2) the item to be added.
 
 Items within bundles will be fulfilled on separate callbacks. For a bundle of 5 items, 5 separate POST callbacks will be issued, each with the same transaction but a different item.
 
-#### For transactions containing either a single item or a bundle containing more one or more times
-1. If your callback returns 200 status for every item, the transaction will move into the __fulfilled__ state.
-1. If your callback returns any non-200 status for any item, the transaction will remain in the __verified__ state.
-1. If your callback does not respond or there is any network error for any item, the transaction will remain in the __verified__ state.
+<h4>For transactions containing either a single item or a bundle containing more one or more times</h4>
 
-#### There is a cascading relationship of the callback url between the organization and the Transaction.
-1. If the inventory_callback_url is non-null on the transaction, this url will be used.
-1. Otherwise, there is a hard-coded external inventory add callback for the entire organization that will be used. All titles, all applications will use the same callback. To set/change this, SGE ops must configure it for you for your environment.
+<ol>
+<li>If your callback returns 200 status for every item, the transaction will move into the <strong>fulfilled</strong> state.</li>
+<li>If your callback returns any non-200 status for any item, the transaction will remain in the <strong>verified</strong> state.</li>
+<li>If your callback does not respond or there is any network error for any item, the transaction will remain in the <strong>verified</strong> state.</li>
+</ol>
+
+<h4>There is a cascading relationship of the callback url between the organization and the Transaction.</h4>
+
+<ol>
+<li>If the inventory_callback_url is non-null on the transaction, this url will be used.</li>
+<li>Otherwise, there is a hard-coded external inventory add callback for the entire organization that will be used. All titles, all applications will use the same callback. To set/change this, SGE ops must configure it for you for your environment.</li>
+</ol>
 
 Each product to be fulfilled will have its own fulfillment entity attached to the transaction. The id of this entity can be stored on the inventory server to guarantee there is no double fulfillment.
 
 If some products in a bundle transaction are fulfilled and others arent, the transaction will remain in the verified state, but some associated fulfillment entities will be in the fulfilled state.
 
-All callbacks for a transaction happen synchronously within the endpoint call that moves them into the verified state. For VirtualTransactions, thats [POST /v1/commerce/transactions](#POST_/v1/commerce/transactions). For RealTransactions, that's [POST /v1/commerce/transactions/:id/record_receipt](#POST_/v1/commerce/transactions/:id/record_receipt).
+All callbacks for a transaction happen synchronously within the endpoint call that moves them into the verified state. For VirtualTransactions, thats <a href="#POST_/v1/commerce/transactions">POST /v1/commerce/transactions</a>. For RealTransactions, that's <a href="#POST_/v1/commerce/transactions/:id/record_receipt">POST /v1/commerce/transactions/:id/record_receipt</a>.
 
 All callbacks have Content-Type and Accept headers set to application/json.
 
-#### Example Callback - VirtualTransaction of a single item
+<h4>Example Callback - VirtualTransaction of a single item</h4>
 
-```
-{
+<pre><code>{
   "transaction": {
     "id": "6787760033073513845",
     "user_id": "9083482094234",
@@ -1030,12 +1155,11 @@ All callbacks have Content-Type and Accept headers set to application/json.
     "entity_type": "fulfillment"
   }
 }
-```
+</code></pre>
 
-#### Example Callback - RealTransaction of a single item
+<h4>Example Callback - RealTransaction of a single item</h4>
 
-```
-{
+<pre><code>{
   "transaction": {
     "id": "6787760033073513845",
     "user_id": "9083482094234",
@@ -1120,35 +1244,33 @@ All callbacks have Content-Type and Accept headers set to application/json.
     "entity_type": "fulfillment"
   }
 }
-```
+</code></pre>
 
-## Catalogs
+<h2>Catalogs</h2>
 
-### <a name="GET_/v1/commerce/catalogs/:id/present"></a>GET /v1/commerce/catalogs/:id/present
+<h3><a name="GET_/v1/commerce/catalogs/:id/present"></a>GET /v1/commerce/catalogs/:id/present</h3>
 
-#### Description
+<h4>Description</h4>
+
 This url presents the catalog for the logged in User. Associated collections, products, and prices are all embedded. Products which are either not visible or are outside of their visibility windows are not shown.  Collections within the catalog are restricted by segmentation tag by default.
 
 To retrieve the catalog without tag segmentation, pass 'false' for the 'restrict_by_segmentation_tag' parameter.  The default value for this flag is 'true'.
 
 Example: GET /v1/commerce/catalogs/:id/present?restrict_by_segmentation_tag=false
 
-Note ```final_amount``` decoration on price entity. This is the amount that the product must be bought at after any promotions are applied. In the example below, the sword is normally 100 diamonds, but there is a 10% promotion discount on the sword, so the final_amount is 90. final_amount is the amount you must pass to [POST /v1/commerce/transactions](#POST_/v1/commerce/transactions) or [POST /v1/commerce/transactions/:id/record_receipt](#POST_/v1/commerce/transactions/:id/record_receipt) as the ``paid_amount`` field.
+Note <code>final_amount</code> decoration on price entity. This is the amount that the product must be bought at after any promotions are applied. In the example below, the sword is normally 100 diamonds, but there is a 10% promotion discount on the sword, so the final_amount is 90. final_amount is the amount you must pass to <a href="#POST_/v1/commerce/transactions">POST /v1/commerce/transactions</a> or <a href="#POST_/v1/commerce/transactions/:id/record_receipt">POST /v1/commerce/transactions/:id/record_receipt</a> as the <code>paid_amount</code> field.
 
-Also note ```active_promotion``` decoration on products. If the product has an active promotion for the collection that it is embedded in, it will appear here.
+Also note <code>active_promotion</code> decoration on products. If the product has an active promotion for the collection that it is embedded in, it will appear here.
 
+<h4>Example Request</h4>
 
-#### Example Request
+<pre><code>GET https://api.example.com/v1/commerce/catalogs/893482982843/present
 
-```
-GET https://api.example.com/v1/commerce/catalogs/893482982843/present
+</code></pre>
 
-```
+<h4>Example Response</h4>
 
-#### Example Response
-
-```
-{
+<pre><code>{
   "data": {
     "id": "893482982843",
     "name": "tutorial",
@@ -1357,32 +1479,46 @@ GET https://api.example.com/v1/commerce/catalogs/893482982843/present
     ]
   }
 }
-```
+</code></pre>
 
-## Products
+<h2>Products</h2>
 
-### <a name="GET_/v1/commerce/products/:id"></a>GET /v1/commerce/products/:id
+<h3><a name="GET_/v1/commerce/products/:id"></a>GET /v1/commerce/products/:id</h3>
 
-#### Description
-Returns an individual product with embedded prices and currencies. Note the ```final_amount``` decoration on price entity is incorrect, not guaranteed, and will be removed in the next version.
+<h4>Description</h4>
 
-## Codes redeemed by user
+Returns an individual product with embedded prices and currencies. Note the <code>final_amount</code> decoration on price entity is incorrect, not guaranteed, and will be removed in the next version.
 
-### <a name="GET_/v1/commerce/redemption_codes?filter[user_id]"></a>GET /v1/commerce/redemption\_codes?filter[user\_id]
+<h2>Codes redeemed by user</h2>
 
-#### Description
+<h3><a name="GET_/v1/commerce/redemption_codes?filter[user_id]"></a>GET /v1/commerce/redemption&#95;codes?filter[user&#95;id]</h3>
+
+<h4>Description</h4>
 
 Gets list of codes redeemed by user
 
-Parameter Name | Description
---- | ---
-**filter[user_id]** _required_ | (UUID) The User ID
-**filter[xxx]** _optional_ | (UUID) The optional set of any additional filters
+<table>
+<thead>
+<tr>
+  <th>Parameter Name</th>
+  <th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>filter[user_id]</strong> <em>required</em></td>
+  <td>(UUID) The User ID</td>
+</tr>
+<tr>
+  <td><strong>filter[xxx]</strong> <em>optional</em></td>
+  <td>(UUID) The optional set of any additional filters</td>
+</tr>
+</tbody>
+</table>
 
-#### Example Response
+<h4>Example Response</h4>
 
-```
-[
+<pre><code>[
   {
     "id":"17409018160212928601",
     "batch_id":"12571636031034717867",
@@ -1495,49 +1631,106 @@ Parameter Name | Description
     "entity_type":"individual_code"
   }
 ]
-```
+</code></pre>
 
-## Redemptions
+<h2>Redemptions</h2>
 
-### <a name="POST\_/v1/commerce/redemption\_codes/:code/redeem"></a>POST /v1/commerce/redemption\_codes/:code/redeem
+<h3><a name="POST\_/v1/commerce/redemption\_codes/:code/redeem"></a>POST /v1/commerce/redemption&#95;codes/:code/redeem</h3>
 
-#### Description
+<h4>Description</h4>
 
 Redeems both group and individual codes
 
-Parameter Name | Description
---- | ---
-**code** _required_ | (String) The alphanumeric individual or a group code
-**user\_id** _required_ | (UUID) The User ID
-**title\_account\_id** _required_ | (UUID) The Title Account ID
-**inventory\_callback\_url** _optional_ | (String) The inventory callback url
+<table>
+<thead>
+<tr>
+  <th>Parameter Name</th>
+  <th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>code</strong> <em>required</em></td>
+  <td>(String) The alphanumeric individual or a group code</td>
+</tr>
+<tr>
+  <td><strong>user&#95;id</strong> <em>required</em></td>
+  <td>(UUID) The User ID</td>
+</tr>
+<tr>
+  <td><strong>title&#95;account&#95;id</strong> <em>required</em></td>
+  <td>(UUID) The Title Account ID</td>
+</tr>
+<tr>
+  <td><strong>inventory&#95;callback&#95;url</strong> <em>optional</em></td>
+  <td>(String) The inventory callback url</td>
+</tr>
+</tbody>
+</table>
 
-#### Response codes
+<h4>Response codes</h4>
 
-Status | Key | Code | Value
---- | --- | --- | ---
-**200** | n/a | n/a | Success
-**404** | n/a | n/a | Code not found
-**412** | commerce_svc.batch.should_be_active | 7.20.200.412 | Error: batch should be active
-**412** | commerce_svc.campaign.should_be_active | 7.19.200.412 | Error: campaign should be active
-**403** | commerce_svc.campaign.max_redemptions_exceeded | 7.19.201.412 | Error: campaign max redemptions exceeded
-**410** | commerce_svc.individual_code.cannot_be_used_twice | 7.22.200.410 | Error: code cannot be used twice
+<table>
+<thead>
+<tr>
+  <th>Status</th>
+  <th>Key</th>
+  <th>Code</th>
+  <th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>200</strong></td>
+  <td>n/a</td>
+  <td>n/a</td>
+  <td>Success</td>
+</tr>
+<tr>
+  <td><strong>404</strong></td>
+  <td>n/a</td>
+  <td>n/a</td>
+  <td>Code not found</td>
+</tr>
+<tr>
+  <td><strong>412</strong></td>
+  <td>commerce_svc.batch.should_be_active</td>
+  <td>7.20.200.412</td>
+  <td>Error: batch should be active</td>
+</tr>
+<tr>
+  <td><strong>412</strong></td>
+  <td>commerce_svc.campaign.should_be_active</td>
+  <td>7.19.200.412</td>
+  <td>Error: campaign should be active</td>
+</tr>
+<tr>
+  <td><strong>403</strong></td>
+  <td>commerce_svc.campaign.max_redemptions_exceeded</td>
+  <td>7.19.201.412</td>
+  <td>Error: campaign max redemptions exceeded</td>
+</tr>
+<tr>
+  <td><strong>410</strong></td>
+  <td>commerce_svc.individual_code.cannot_be_used_twice</td>
+  <td>7.22.200.410</td>
+  <td>Error: code cannot be used twice</td>
+</tr>
+</tbody>
+</table>
 
+<h4>Example Request. Group code redemption</h4>
 
-#### Example Request. Group code redemption
-
-```
-curl -X  POST '/v1/commerce/redemption_codes/9A2E3F9A3/redeem' -d '{
+<pre><code>curl -X  POST '/v1/commerce/redemption_codes/9A2E3F9A3/redeem' -d '{
    "data": {
       "user_id": 15516768902667579408,
       "title_account_id": 8699155139611847029
    }
-```
+</code></pre>
 
-#### Example Response. Group code redemption
+<h4>Example Response. Group code redemption</h4>
 
-```
-{
+<pre><code>{
   "id":"6233110504466525260",
   "batch_id":"4674166508773027565",
   "user_id":"15516768902667579408",
@@ -1553,22 +1746,20 @@ curl -X  POST '/v1/commerce/redemption_codes/9A2E3F9A3/redeem' -d '{
   "fulfilled_at":"2014-03-07T08:38:14Z",
   "entity_type":"individual_code"
 }
-```
+</code></pre>
 
-#### Example Request. Individual code redemption
+<h4>Example Request. Individual code redemption</h4>
 
-```
-curl -X  POST '/v1/commerce/redemption_codes/1111222233334444/redeem' -d '{
+<pre><code>curl -X  POST '/v1/commerce/redemption_codes/1111222233334444/redeem' -d '{
    "data": {
       "user_id": 12827988067089590768,
       "title_account_id": 14660885356631276281
    }
-```
+</code></pre>
 
-#### Example Response. Individual code redemption
+<h4>Example Response. Individual code redemption</h4>
 
-```
-{
+<pre><code>{
   "id":"16962106439331460180",
   "batch_id":"14611424917294961010",
   "user_id":"12827988067089590768",
@@ -1584,41 +1775,82 @@ curl -X  POST '/v1/commerce/redemption_codes/1111222233334444/redeem' -d '{
   "fulfilled_at":"2014-03-07T08:41:26Z",
   "entity_type":"individual_code"
 }
-```
+</code></pre>
 
+<h2>Get the code redemption status</h2>
 
-## Get the code redemption status
+<h3><a name="GET\_/v1/commerce/redemption\_codes/:code/status"></a>GET /v1/commerce/redemption&#95;codes/:code/status</h3>
 
-### <a name="GET\_/v1/commerce/redemption\_codes/:code/status"></a>GET /v1/commerce/redemption\_codes/:code/status
-
-#### Description
+<h4>Description</h4>
 
 Get the code redemption status
 
-Parameter Name | Description
---- | ---
-**code** _required_ | (String) The  group or a individual code to check status
+<table>
+<thead>
+<tr>
+  <th>Parameter Name</th>
+  <th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>code</strong> <em>required</em></td>
+  <td>(String) The  group or a individual code to check status</td>
+</tr>
+</tbody>
+</table>
 
-#### Status codes
+<h4>Status codes</h4>
 
-Code | Value
---- | ---
-**0** | New (_initial_)
-**1** | Verified
-**2** | Completed
+<table>
+<thead>
+<tr>
+  <th>Code</th>
+  <th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td><strong>0</strong></td>
+  <td>New (<em>initial</em>)</td>
+</tr>
+<tr>
+  <td><strong>1</strong></td>
+  <td>Verified</td>
+</tr>
+<tr>
+  <td><strong>2</strong></td>
+  <td>Completed</td>
+</tr>
+</tbody>
+</table>
 
-#### Errors
+<h4>Errors</h4>
 
 See standard REST errors for details.
 
-HTTP Code | Internal Code | Name | Description/Metadata
---- | --- | --- | ---
-404 | 7.23.1.404 | commerce_svc.redemption_code.record_not_found | Will be thrown if you attempt to get status of code that is not found
+<table>
+<thead>
+<tr>
+  <th>HTTP Code</th>
+  <th>Internal Code</th>
+  <th>Name</th>
+  <th>Description/Metadata</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+  <td>404</td>
+  <td>7.23.1.404</td>
+  <td>commerce_svc.redemption_code.record_not_found</td>
+  <td>Will be thrown if you attempt to get status of code that is not found</td>
+</tr>
+</tbody>
+</table>
 
-#### Group code example response. user\_id and title\_account\_id not present
+<h4>Group code example response. user&#95;id and title&#95;account&#95;id not present</h4>
 
-```
-{
+<pre><code>{
   "code":"TESTING",
   "batch":{
     "id":"6910861215640732739",
@@ -1656,12 +1888,11 @@ HTTP Code | Internal Code | Name | Description/Metadata
   },
   "entity_type":"group_code"
 }
-```
+</code></pre>
 
-#### Group code example response. user\_id and title\_account\_id present
+<h4>Group code example response. user&#95;id and title&#95;account&#95;id present</h4>
 
-```
-{
+<pre><code>{
   "code":"TESTING",
   "batch":{
     "id":"6630068939587910727",
@@ -1700,12 +1931,11 @@ HTTP Code | Internal Code | Name | Description/Metadata
    "entity_type":"group_code",
    "individual_codes":[]
 }
-```
+</code></pre>
 
-#### Group code with individual codes example response
+<h4>Group code with individual codes example response</h4>
 
-```
-{
+<pre><code>{
   "code":"TESTING",
   "batch":{
     "id":"2489836920699410811",
@@ -1782,12 +2012,11 @@ HTTP Code | Internal Code | Name | Description/Metadata
         "entity_type":"individual_code"
     }]
 }
-```
+</code></pre>
 
-#### Individual code with status example response
+<h4>Individual code with status example response</h4>
 
-```
-{
+<pre><code>{
   "code":"1111222233334444",
   "status":1,
   "redeemed_at":"2014-03-05T14:37:45Z",
@@ -1829,4 +2058,4 @@ HTTP Code | Internal Code | Name | Description/Metadata
   },
   "entity_type":"individual_code"
 }
-```
+</code></pre>
